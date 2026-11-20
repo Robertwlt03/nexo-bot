@@ -19,6 +19,18 @@ describe("commands", () => {
         }
     });
 
+    it("name and describe every option in German too", () => {
+        const options = definitions.flatMap((definition) => definition.options ?? []);
+        expect(options.length).toBeGreaterThan(0);
+        for (const option of options) {
+            expect(option.name_localizations?.de, `${option.name} has no German name`).toBeTruthy();
+            expect(
+                option.description_localizations?.de,
+                `${option.name}: no German text`,
+            ).toBeTruthy();
+        }
+    });
+
     it("are all listed by /help, in the asker's language", async () => {
         const help = commands.find(({ data }) => data.name === "help");
         const replies: { embeds: EmbedBuilder[] }[] = [];

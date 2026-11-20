@@ -8,11 +8,14 @@ in the language of each member's Discord.
 
 ## <img src="assets/icons/features.svg" height="33" align="absmiddle" alt="">What it does
 
-| Command | What it does                                                                  |
-|---------|-------------------------------------------------------------------------------|
-| `/ping` | Shows how fast Nexo answers: the round trip and the connection to Discord     |
+| Command | What it does |
+|---|---|
+| `/ping` | Shows how fast Nexo answers: the round trip and the connection to Discord |
 | `/info` | Shows the version, how many servers use Nexo, and how long it has been online |
-| `/help` | Lists every command with its description                                      |
+| `/serverinfo` | Shows the server: owner, members, channels, roles, boosts and its age |
+| `/userinfo` | Shows a member, or you: account age, joining date and roles |
+| `/avatar` | Shows a member's profile picture, or yours, in full size |
+| `/help` | Lists every command with its description |
 
 ## <img src="assets/icons/install.svg" height="33" align="absmiddle" alt="">Install
 
@@ -36,7 +39,7 @@ You need [Node.js 26](https://nodejs.org) and [pnpm](https://pnpm.io).
    pnpm dev
    ```
 
-   The console shows `Nexo#1234 is online with 3 commands`. `pnpm dev` restarts the bot whenever
+   The console shows `Nexo#1234 is online with 6 commands`. `pnpm dev` restarts the bot whenever
    a file changes; `pnpm start` runs it once.
 
 ## <img src="assets/icons/use.svg" height="33" align="absmiddle" alt="">Use
