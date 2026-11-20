@@ -11,6 +11,8 @@ All notable changes to this project are listed here. The format follows
 - The bot itself, rebuilt from scratch on Node.js 26 and discord.js 14, with its first slash
   commands: `/ping`, `/info` and `/help`, in German and English.
 - `/serverinfo`, `/userinfo` and `/avatar`: the server, a member and a member's profile picture.
+- `/welcome`: a welcome card for new members in a channel, with the placeholders `{user}`,
+  `{username}`, `{server}` and `{membercount}`. Needs the Server Members Intent.
 
 ### Changed
 

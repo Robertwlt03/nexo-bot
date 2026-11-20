@@ -8,10 +8,20 @@ describe("readConfig", () => {
     });
 
     it("treats an empty test server as none", () => {
-        expect(readConfig({ DISCORD_TOKEN: "token", GUILD_ID: "" })).toEqual({ token: "token" });
+        expect(readConfig({ DISCORD_TOKEN: "token", GUILD_ID: "" })).toEqual({
+            token: "token",
+            databasePath: "data/nexo.sqlite",
+        });
         expect(readConfig({ DISCORD_TOKEN: " token ", GUILD_ID: " 42 " })).toEqual({
             token: "token",
             guildId: "42",
+            databasePath: "data/nexo.sqlite",
         });
+    });
+
+    it("takes another place for the settings from DATABASE_PATH", () => {
+        expect(
+            readConfig({ DISCORD_TOKEN: "t", DATABASE_PATH: " /srv/nexo.sqlite " }).databasePath,
+        ).toBe("/srv/nexo.sqlite");
     });
 });

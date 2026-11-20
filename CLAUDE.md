@@ -20,7 +20,8 @@
   `src/translations/de.ts` (German); a command shows them through `texts(interaction.locale)`.
 - Every command has an English description and a German one (`setDescriptionLocalizations`).
 - One small step at a time: each command is tried on Robert's test server before the next one.
-- No privileged intents unless a feature needs one, and then say which and why.
+- No privileged intents unless a feature needs one, and then say which and why. Today: Server
+  Members (`GuildMembers`), for the welcome; it is turned on in the Developer Portal.
 - Read the docs of the versions in use (the installed typings first) before using an API; avoid
   what they mark deprecated, such as `ephemeral: true` (use `flags: MessageFlags.Ephemeral`).
 - Never commit `.env` or a token.

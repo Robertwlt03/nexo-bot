@@ -7,10 +7,14 @@ import {
 } from "discord.js";
 import { commands } from "./commands/index.ts";
 import { readConfig } from "./config.ts";
+import { openSettings } from "./settings.ts";
 import { texts } from "./texts.ts";
+import { sendWelcome } from "./welcome.ts";
 
 const config = readConfig(process.env);
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+const settings = openSettings(config.databasePath);
+// GuildMembers is a privileged intent: it tells the bot when someone joins, for the welcome.
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers] });
 
 client.once(Events.ClientReady, async (ready) => {
     const definitions = commands.map((command) => command.data.toJSON());
@@ -37,7 +41,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         // A command Discord still lists from an older version of the bot gets an answer,
         // not silence.
         await (command
-            ? command.run(interaction)
+            ? command.run(interaction, { settings })
             : interaction.reply({
                   content: texts(interaction.locale).unknownCommand,
                   flags: MessageFlags.Ephemeral,
@@ -54,6 +58,15 @@ client.on(Events.InteractionCreate, async (interaction) => {
             ? interaction.followUp(reply)
             : interaction.reply(reply)
         ).catch((replyError) => console.error("The error answer failed too:", replyError));
+    }
+});
+
+client.on(Events.GuildMemberAdd, async (member) => {
+    const welcome = settings.welcome(member.guild.id);
+    if (!welcome || member.user.bot) return; // a bot someone adds is not a new member to greet
+    const result = await sendWelcome(member, welcome).catch((error: unknown) => error);
+    if (result !== "sent") {
+        console.error(`Could not welcome ${member.user.tag} on ${member.guild.name}:`, result);
     }
 });
 

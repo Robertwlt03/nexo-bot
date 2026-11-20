@@ -30,4 +30,34 @@ export const de: Texts = {
     avatarTitle: (name: string) => `Profilbild von ${name}`,
     fullSize: "In voller Größe öffnen",
     accountPicture: "Kontobild",
+    welcomeDescription: "Begrüßt neue Mitglieder in einem Kanal",
+    welcomeSetupName: "einrichten",
+    welcomeSetupDescription: "Legt Kanal und Nachricht für neue Mitglieder fest",
+    welcomeChannelName: "kanal",
+    welcomeChannelDescription: "Wo Nexo neue Mitglieder begrüßt",
+    welcomeMessageName: "nachricht",
+    welcomeMessageDescription: "Platzhalter: {user} {username} {server} {membercount}",
+    welcomePingName: "erwähnen",
+    welcomePingDescription:
+        "Das neue Mitglied über der Karte erwähnen, damit es benachrichtigt wird",
+    welcomeTestName: "testen",
+    welcomeTestDescription: "Schickt die Begrüßung für dich, zum Ausprobieren",
+    welcomeOffName: "aus",
+    welcomeOffDescription: "Schaltet die Begrüßung aus",
+    defaultWelcome: "Willkommen auf **{server}**, {user}! Du bist unser {membercount}. Mitglied.",
+    welcomeSaved: (channel: string) =>
+        `Neue Mitglieder werden jetzt in ${channel} begrüßt. ` +
+        "Probier es mit `/welcome testen` aus.",
+    welcomeNotSetUp: "Die Begrüßung ist noch nicht eingerichtet: nutze `/welcome einrichten`.",
+    welcomeTestSent: (channel: string) => `In ${channel} geschickt.`,
+    welcomeOff: "Die Begrüßung ist aus.",
+    welcomeChannelGone:
+        "Den Begrüßungskanal gibt es nicht mehr. Wähle mit `/welcome einrichten` einen neuen.",
+    welcomeCannotPost: (channel: string, missing: string) =>
+        `Nexo kann in ${channel} noch nicht schreiben. Gib ihm dort diese Rechte: ${missing}.`,
+    permissionNames: {
+        ViewChannel: "Kanal ansehen",
+        SendMessages: "Nachrichten senden",
+        EmbedLinks: "Links einbetten",
+    },
 };

@@ -32,6 +32,33 @@ export const en = {
     avatarTitle: (name: string) => `Profile picture of ${name}`,
     fullSize: "Open in full size",
     accountPicture: "Account picture",
+    welcomeDescription: "Greets new members in a channel",
+    welcomeSetupName: "setup",
+    welcomeSetupDescription: "Sets the channel and the message for new members",
+    welcomeChannelName: "channel",
+    welcomeChannelDescription: "Where Nexo greets new members",
+    welcomeMessageName: "message",
+    welcomeMessageDescription: "Placeholders: {user} {username} {server} {membercount}",
+    welcomePingName: "ping",
+    welcomePingDescription: "Mention the new member above the card, so they get a notification",
+    welcomeTestName: "test",
+    welcomeTestDescription: "Sends the welcome for you, to try it",
+    welcomeOffName: "off",
+    welcomeOffDescription: "Turns the welcome off",
+    defaultWelcome: "Welcome to **{server}**, {user}! You are member number {membercount}.",
+    welcomeSaved: (channel: string) =>
+        `New members are now greeted in ${channel}. Try it with \`/welcome test\`.`,
+    welcomeNotSetUp: "The welcome is not set up yet: use `/welcome setup`.",
+    welcomeTestSent: (channel: string) => `Sent to ${channel}.`,
+    welcomeOff: "The welcome is off.",
+    welcomeChannelGone: "The welcome channel is gone. Choose a new one with `/welcome setup`.",
+    welcomeCannotPost: (channel: string, missing: string) =>
+        `Nexo can't post in ${channel} yet. Give it these permissions there: ${missing}.`,
+    permissionNames: {
+        ViewChannel: "View Channel",
+        SendMessages: "Send Messages",
+        EmbedLinks: "Embed Links",
+    },
 };
 
 export type Texts = typeof en;

@@ -2,3 +2,5 @@ node_modules/
 .env
 .DS_Store
 .idea/
+# Each server's settings (DATABASE_PATH), created when the bot starts.
+data/

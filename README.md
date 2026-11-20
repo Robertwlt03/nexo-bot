@@ -8,14 +8,15 @@ in the language of each member's Discord.
 
 ## <img src="assets/icons/features.svg" height="33" align="absmiddle" alt="">What it does
 
-| Command | What it does |
-|---|---|
-| `/ping` | Shows how fast Nexo answers: the round trip and the connection to Discord |
-| `/info` | Shows the version, how many servers use Nexo, and how long it has been online |
-| `/serverinfo` | Shows the server: owner, members, channels, roles, boosts and its age |
-| `/userinfo` | Shows a member, or you: account age, joining date and roles |
-| `/avatar` | Shows a member's profile picture, or yours, in full size |
-| `/help` | Lists every command with its description |
+| Command       | What it does                                                                  |
+|---------------|-------------------------------------------------------------------------------|
+| `/ping`       | Shows how fast Nexo answers: the round trip and the connection to Discord     |
+| `/info`       | Shows the version, how many servers use Nexo, and how long it has been online |
+| `/serverinfo` | Shows the server: owner, members, channels, roles, boosts and its age         |
+| `/userinfo`   | Shows a member, or you: account age, joining date and roles                   |
+| `/avatar`     | Shows a member's profile picture, or yours, in full size                      |
+| `/welcome`    | Greets new members in a channel: `setup`, `test`, `off`; for admins           |
+| `/help`       | Lists every command with its description                                      |
 
 ## <img src="assets/icons/install.svg" height="33" align="absmiddle" alt="">Install
 
@@ -25,7 +26,9 @@ You need [Node.js 26](https://nodejs.org) and [pnpm](https://pnpm.io).
    [Discord Developer Portal](https://discord.com/developers/applications), choose
    _New Application_ and name it, such as _Nexo Test_. Under _Bot_, choose _Reset Token_ and copy
    the token. A new application is best: one an older bot used still lists that bot's commands,
-   which Nexo then answers with "Nexo doesn't have this command (anymore)".
+   which Nexo then answers with "Nexo doesn't have this command (anymore)". On the same page, under
+   _Privileged Gateway Intents_, turn on _Server Members Intent_: the welcome needs to know when
+   someone joins. Without it, the bot stops at its start with "Used disallowed intents".
 2. **Fill in the settings.** Copy `.env.example` to `.env` and paste the token after
    `DISCORD_TOKEN=`. For a test server, turn on _Developer Mode_ in Discord's settings under
    _Advanced_, right-click your server, choose _Copy Server ID_ and paste it after `GUILD_ID=`.
@@ -39,7 +42,7 @@ You need [Node.js 26](https://nodejs.org) and [pnpm](https://pnpm.io).
    pnpm dev
    ```
 
-   The console shows `Nexo#1234 is online with 6 commands`. `pnpm dev` restarts the bot whenever
+   The console shows `Nexo#1234 is online with 7 commands`. `pnpm dev` restarts the bot whenever
    a file changes; `pnpm start` runs it once.
 
 ## <img src="assets/icons/use.svg" height="33" align="absmiddle" alt="">Use
@@ -55,7 +58,10 @@ is in, which can take Discord a moment.
   Discord and answers each slash command with the matching one.
 - `src/texts.ts` holds every text in English; `src/translations/de.ts` holds the German ones.
   Each answer picks the language of the member's Discord.
-- The bot only asks Discord for the server list (the `Guilds` intent), no privileged intents.
+- The bot asks Discord for the server list (`Guilds`) and, for the welcome, for members joining
+  (`GuildMembers`, the privileged _Server Members Intent_).
+- Each server's settings, such as its welcome, sit in an SQLite file, `data/nexo.sqlite` (or
+  `DATABASE_PATH`), through the SQLite that Node.js brings along.
 
 ## <img src="assets/icons/contribute.svg" height="33" align="absmiddle" alt="">Contribute
 
