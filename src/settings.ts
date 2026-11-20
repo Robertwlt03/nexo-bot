@@ -40,6 +40,12 @@ export function openSettings(path: string) {
         reason TEXT NOT NULL,
         created_at INTEGER NOT NULL
     )`);
+    database.exec(`CREATE TABLE IF NOT EXISTS xp (
+        guild_id TEXT NOT NULL,
+        user_id TEXT NOT NULL,
+        total_xp INTEGER NOT NULL,
+        PRIMARY KEY (guild_id, user_id)
+    )`);
     database.exec(`CREATE TABLE IF NOT EXISTS autorole (
         guild_id TEXT NOT NULL,
         role_id TEXT NOT NULL,
@@ -75,6 +81,19 @@ export function openSettings(path: string) {
         database.prepare(`SELECT id, moderator_id, reason, created_at FROM warning
         WHERE guild_id = ? AND user_id = ? ORDER BY id DESC`);
     const removeWarning = database.prepare("DELETE FROM warning WHERE guild_id = ? AND id = ?");
+    const addXp = database.prepare(`INSERT INTO xp VALUES (?, ?, ?)
+        ON CONFLICT (guild_id, user_id) DO UPDATE SET total_xp = total_xp + excluded.total_xp
+        RETURNING total_xp`);
+    const selectXp = database.prepare("SELECT total_xp FROM xp WHERE guild_id = ? AND user_id = ?");
+    const selectRank = database.prepare(
+        "SELECT COUNT(*) AS above FROM xp WHERE guild_id = ? AND total_xp > ?",
+    );
+    const totalXp = (guildId: string, userId: string): number =>
+        (selectXp.get(guildId, userId) as { total_xp: number } | undefined)?.total_xp ?? 0;
+    const selectTop = database.prepare(
+        `SELECT user_id, total_xp FROM xp WHERE guild_id = ?
+            ORDER BY total_xp DESC, user_id LIMIT ?`,
+    );
 
     return {
         greeting(kind: GreetingKind, guildId: string): GreetingSettings | undefined {
@@ -118,6 +137,23 @@ export function openSettings(path: string) {
         /** False when the server has no warning with this number. */
         removeWarning(guildId: string, id: number): boolean {
             return removeWarning.run(guildId, id).changes > 0;
+        },
+        /** Adds XP to a member and gives back their new total. */
+        addXp(guildId: string, userId: string, amount: number): number {
+            return (addXp.get(guildId, userId, amount) as { total_xp: number }).total_xp;
+        },
+        /** A member's total XP on a server; 0 before their first message. */
+        totalXp,
+        /** A member's place on the leaderboard: 1 for the most XP; shared XP shares the place. */
+        rank(guildId: string, userId: string): number {
+            const above = selectRank.get(guildId, totalXp(guildId, userId)) as { above: number };
+            return above.above + 1;
+        },
+        /** The members with the most XP on a server, most first. */
+        leaderboard(guildId: string, limit: number): { userId: string; totalXp: number }[] {
+            return (selectTop.all(guildId, limit) as { user_id: string; total_xp: number }[]).map(
+                (row) => ({ userId: row.user_id, totalXp: row.total_xp }),
+            );
         },
     };
 }

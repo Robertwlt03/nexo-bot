@@ -5,6 +5,7 @@ import {
     type GuildMember,
     type InteractionReplyOptions,
     MessageFlags,
+    Options,
     type PartialGuildMember,
     Partials,
 } from "discord.js";
@@ -12,6 +13,7 @@ import { giveAutoroles } from "./autorole.ts";
 import { commands } from "./commands/index.ts";
 import { readConfig } from "./config.ts";
 import { sendGreeting } from "./greeting.ts";
+import { reachedLevel, rollXp, xpCooldowns } from "./leveling.ts";
 import { type GreetingKind, openSettings } from "./settings.ts";
 import { texts } from "./texts.ts";
 
@@ -19,9 +21,17 @@ const config = readConfig(process.env);
 const settings = openSettings(config.databasePath);
 const client = new Client({
     // GuildMembers is a privileged intent: it tells the bot when someone joins or leaves.
-    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
+    // GuildMessages only says that someone wrote, for XP; reading what they wrote would need
+    // the privileged MessageContent intent, which Nexo does without.
+    intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMembers,
+        GatewayIntentBits.GuildMessages,
+    ],
     // Without it, Discord.js reports only leavers it happens to have seen since the bot started.
     partials: [Partials.GuildMember],
+    // Discord.js would keep 200 messages per channel; Nexo never reads them, it only counts XP.
+    makeCache: Options.cacheWithLimits({ ...Options.DefaultMakeCacheSettings, MessageManager: 0 }),
 });
 
 client.once(Events.ClientReady, async (ready) => {
@@ -91,6 +101,27 @@ client.on(Events.GuildMemberAdd, async (member) => {
             console.error(`Could not give the automatic roles to ${member.user.tag}:`, error),
         ),
     ]);
+});
+
+const cooldowns = xpCooldowns();
+
+client.on(Events.MessageCreate, async (message) => {
+    if (!message.inGuild() || message.author.bot || message.webhookId || message.system) return;
+    if (!cooldowns.take(`${message.guildId}:${message.author.id}`, Date.now())) return;
+    try {
+        const earned = rollXp();
+        const total = settings.addXp(message.guildId, message.author.id, earned);
+        const level = reachedLevel(total, earned);
+        if (level === undefined) return;
+        // "Level" reads the same in German and English, so the announcement needs no language.
+        await message.channel.send({
+            content: `🎉 ${message.author} → **Level ${level}**`,
+            allowedMentions: { users: [message.author.id] },
+        });
+    } catch (error) {
+        // A failed write or announcement costs one message's XP, never the bot.
+        console.error(`Could not give XP to ${message.author.tag}:`, error);
+    }
 });
 
 client.on(Events.GuildMemberRemove, async (member) => {

@@ -8,22 +8,24 @@ in the language of each member's Discord.
 
 ## <img src="assets/icons/features.svg" height="33" align="absmiddle" alt="">What it does
 
-| Command       | What it does                                                                  |
-|---------------|-------------------------------------------------------------------------------|
-| `/ping`       | Shows how fast Nexo answers: the round trip and the connection to Discord     |
-| `/info`       | Shows the version, how many servers use Nexo, and how long it has been online |
-| `/serverinfo` | Shows the server: owner, members, channels, roles, boosts and its age         |
-| `/userinfo`   | Shows a member, or you: account age, joining date and roles                   |
-| `/avatar`     | Shows a member's profile picture, or yours, in full size                      |
-| `/welcome`    | Greets new members in a channel: `setup`, `test`, `off`; for admins           |
-| `/goodbye`    | Says goodbye in a channel when someone leaves: `setup`, `test`, `off`         |
-| `/autorole`   | Gives new members roles: `add`, `remove`, `list`; for admins                  |
-| `/warn`       | Warns a member with a reason; Nexo keeps the warning                          |
-| `/warnings`   | Shows a member's warnings, numbered; `/unwarn` removes one                    |
-| `/timeout`    | Mutes a member for 5 minutes up to a week; `/untimeout` ends it               |
-| `/kick`       | Removes a member from the server; they can join again                         |
-| `/ban`        | Bans someone, also before they join; `/unban` lifts it                        |
-| `/help`       | Lists every command with its description                                      |
+| Command        | What it does                                                                  |
+|----------------|-------------------------------------------------------------------------------|
+| `/ping`        | Shows how fast Nexo answers: the round trip and the connection to Discord     |
+| `/info`        | Shows the version, how many servers use Nexo, and how long it has been online |
+| `/serverinfo`  | Shows the server: owner, members, channels, roles, boosts and its age         |
+| `/userinfo`    | Shows a member, or you: account age, joining date and roles                   |
+| `/avatar`      | Shows a member's profile picture, or yours, in full size                      |
+| `/welcome`     | Greets new members in a channel: `setup`, `test`, `off`; for admins           |
+| `/goodbye`     | Says goodbye in a channel when someone leaves: `setup`, `test`, `off`         |
+| `/autorole`    | Gives new members roles: `add`, `remove`, `list`; for admins                  |
+| `/warn`        | Warns a member with a reason; Nexo keeps the warning                          |
+| `/warnings`    | Shows a member's warnings, numbered; `/unwarn` removes one                    |
+| `/timeout`     | Mutes a member for 5 minutes up to a week; `/untimeout` ends it               |
+| `/kick`        | Removes a member from the server; they can join again                         |
+| `/ban`         | Bans someone, also before they join; `/unban` lifts it                        |
+| `/rank`        | Shows a member's level, rank and XP, or yours                                 |
+| `/leaderboard` | Shows the ten members with the most XP                                        |
+| `/help`        | Lists every command with its description                                      |
 
 ## <img src="assets/icons/install.svg" height="33" align="absmiddle" alt="">Install
 
@@ -51,7 +53,7 @@ You need [Node.js 26](https://nodejs.org) and [pnpm](https://pnpm.io).
    pnpm dev
    ```
 
-   The console shows `Nexo#1234 is online with 17 commands`. `pnpm dev` restarts the bot whenever
+   The console shows `Nexo#1234 is online with 19 commands`. `pnpm dev` restarts the bot whenever
    a file changes; `pnpm start` runs it once.
 
 ## <img src="assets/icons/use.svg" height="33" align="absmiddle" alt="">Use
@@ -71,6 +73,10 @@ is in, which can take Discord a moment.
   roles, for members joining and leaving (`GuildMembers`, the privileged _Server Members Intent_).
 - `/welcome` and `/goodbye` are one command built twice (`src/commands/greeting.ts`); both post
   the same card (`src/greeting.ts`).
+- Members earn 15 to 25 XP for a message, at most every 20 seconds; level _L_ needs
+  5·_L_² + 50·_L_ + 50 more XP (`src/leveling.ts`). Nexo only learns that someone wrote
+  (`GuildMessages`), never what: it does without the privileged _Message Content Intent_.
+  XP stays when someone leaves, so a member who comes back keeps their level.
 - Moderation checks the role order itself (`src/moderation.ts`): Discord only checks that a
   moderator has the permission, so without it someone could act through Nexo on a member who
   ranks above them. Nobody can act on themselves, on Nexo or on the server's owner.

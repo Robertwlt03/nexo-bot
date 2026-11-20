@@ -156,6 +156,15 @@ export const en = {
         kick: "Kick, Approve, and Reject Members",
         ban: "Ban Members",
     },
+    rankDescription: "Shows a member's level and XP",
+    leaderboardDescription: "Shows who has the most XP",
+    levelName: "Level",
+    rankPlace: "Rank",
+    nextLevel: "Next level",
+    totalXp: "Total XP",
+    leaderboardTitle: (server: string) => `Leaderboard of ${server}`,
+    leaderboardEmpty: "Nobody has XP yet. Members earn it by writing messages.",
+    leaderboardYou: (place: number) => `You: rank ${place}`,
 };
 
 export type Texts = typeof en;

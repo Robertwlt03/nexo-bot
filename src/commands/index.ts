@@ -4,6 +4,7 @@ import type { Command } from "./command.ts";
 import { goodbye, welcome } from "./greeting.ts";
 import { help } from "./help.ts";
 import { info } from "./info.ts";
+import { leaderboard, rank } from "./levels.ts";
 import { ban, kick, timeout, unban, untimeout } from "./moderation.ts";
 import { ping } from "./ping.ts";
 import { serverinfo } from "./serverinfo.ts";
@@ -28,5 +29,7 @@ export const commands: Command[] = [
     kick,
     ban,
     unban,
+    rank,
+    leaderboard,
 ];
 commands.push(help(commands));

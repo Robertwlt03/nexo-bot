@@ -159,4 +159,14 @@ export const de: Texts = {
         kick: "Mitglieder kicken, annehmen und ablehnen",
         ban: "Mitglieder bannen",
     },
+    rankDescription: "Zeigt Level und XP eines Mitglieds",
+    leaderboardDescription: "Zeigt, wer die meisten XP hat",
+    levelName: "Level",
+    rankPlace: "Rang",
+    nextLevel: "Nächstes Level",
+    totalXp: "XP gesamt",
+    leaderboardTitle: (server: string) => `Bestenliste von ${server}`,
+    leaderboardEmpty:
+        "Noch hat niemand XP. Mitglieder sammeln sie, indem sie Nachrichten schreiben.",
+    leaderboardYou: (place: number) => `Du: Rang ${place}`,
 };

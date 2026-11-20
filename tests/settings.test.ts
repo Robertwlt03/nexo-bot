@@ -87,3 +87,24 @@ describe("warnings", () => {
         expect(settings.warnings("server", "lena").map((w) => w.id)).toEqual([second]);
     });
 });
+
+describe("XP", () => {
+    it("adds up per server and member, and ranks members by their total", () => {
+        const settings = openSettings(":memory:");
+        expect(settings.totalXp("server", "lena")).toBe(0);
+        expect(settings.addXp("server", "lena", 20)).toBe(20);
+        expect(settings.addXp("server", "lena", 15)).toBe(35);
+        settings.addXp("server", "tom", 50);
+        settings.addXp("server", "mia", 35);
+        settings.addXp("other", "lena", 999);
+
+        expect(settings.totalXp("server", "lena")).toBe(35);
+        expect(settings.rank("server", "tom")).toBe(1);
+        expect(settings.rank("server", "lena")).toBe(2);
+        expect(settings.rank("server", "mia")).toBe(2); // the same XP shares the place
+        expect(settings.leaderboard("server", 2)).toEqual([
+            { userId: "tom", totalXp: 50 },
+            { userId: "lena", totalXp: 35 },
+        ]);
+    });
+});
