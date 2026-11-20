@@ -2,19 +2,27 @@ import {
     Client,
     Events,
     GatewayIntentBits,
+    type GuildMember,
     type InteractionReplyOptions,
     MessageFlags,
+    type PartialGuildMember,
+    Partials,
 } from "discord.js";
+import { giveAutoroles } from "./autorole.ts";
 import { commands } from "./commands/index.ts";
 import { readConfig } from "./config.ts";
-import { openSettings } from "./settings.ts";
+import { sendGreeting } from "./greeting.ts";
+import { type GreetingKind, openSettings } from "./settings.ts";
 import { texts } from "./texts.ts";
-import { sendWelcome } from "./welcome.ts";
 
 const config = readConfig(process.env);
 const settings = openSettings(config.databasePath);
-// GuildMembers is a privileged intent: it tells the bot when someone joins, for the welcome.
-const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers] });
+const client = new Client({
+    // GuildMembers is a privileged intent: it tells the bot when someone joins or leaves.
+    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
+    // Without it, Discord.js reports only leavers it happens to have seen since the bot started.
+    partials: [Partials.GuildMember],
+});
 
 client.once(Events.ClientReady, async (ready) => {
     const definitions = commands.map((command) => command.data.toJSON());
@@ -61,13 +69,33 @@ client.on(Events.InteractionCreate, async (interaction) => {
     }
 });
 
-client.on(Events.GuildMemberAdd, async (member) => {
-    const welcome = settings.welcome(member.guild.id);
-    if (!welcome || member.user.bot) return; // a bot someone adds is not a new member to greet
-    const result = await sendWelcome(member, welcome).catch((error: unknown) => error);
+/** Posts a server's welcome or goodbye for a member, if it has one, and logs what went wrong. */
+async function greet(kind: GreetingKind, member: GuildMember | PartialGuildMember): Promise<void> {
+    const greeting = settings.greeting(kind, member.guild.id);
+    if (!greeting) return;
+    const result = await sendGreeting(member, greeting).catch((error: unknown) => error);
     if (result !== "sent") {
-        console.error(`Could not welcome ${member.user.tag} on ${member.guild.name}:`, result);
+        console.error(
+            `Could not post the ${kind} for ${member.user.tag} on ${member.guild.name}:`,
+            result,
+        );
     }
+}
+
+// A bot someone adds or removes is not a member to greet or to give roles.
+client.on(Events.GuildMemberAdd, async (member) => {
+    if (member.user.bot) return;
+    await Promise.all([
+        greet("welcome", member),
+        giveAutoroles(member, settings).catch((error: unknown) =>
+            console.error(`Could not give the automatic roles to ${member.user.tag}:`, error),
+        ),
+    ]);
+});
+
+client.on(Events.GuildMemberRemove, async (member) => {
+    if (member.user.bot) return;
+    await greet("goodbye", member);
 });
 
 await client.login(config.token);

@@ -21,7 +21,8 @@
 - Every command has an English description and a German one (`setDescriptionLocalizations`).
 - One small step at a time: each command is tried on Robert's test server before the next one.
 - No privileged intents unless a feature needs one, and then say which and why. Today: Server
-  Members (`GuildMembers`), for the welcome; it is turned on in the Developer Portal.
+  Members (`GuildMembers`), for welcome, goodbye and automatic roles; it is turned on in the
+  Developer Portal.
 - Read the docs of the versions in use (the installed typings first) before using an API; avoid
   what they mark deprecated, such as `ephemeral: true` (use `flags: MessageFlags.Ephemeral`).
 - Never commit `.env` or a token.
@@ -31,6 +32,8 @@
 - Entry point: `src/main.ts`; settings: `src/config.ts`
 - Commands: one file each in `src/commands/`, listed in `src/commands/index.ts`
 - Answer cards: `src/card.ts`; texts: `src/texts.ts` and `src/translations/`
+- Each server's settings: `src/settings.ts` (SQLite); welcome and goodbye: `src/greeting.ts`;
+  automatic roles: `src/autorole.ts`
 - Tests: `tests/`; README graphics: `assets/`
 
 ## Before every commit

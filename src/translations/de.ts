@@ -30,34 +30,73 @@ export const de: Texts = {
     avatarTitle: (name: string) => `Profilbild von ${name}`,
     fullSize: "In voller Größe öffnen",
     accountPicture: "Kontobild",
-    welcomeDescription: "Begrüßt neue Mitglieder in einem Kanal",
-    welcomeSetupName: "einrichten",
-    welcomeSetupDescription: "Legt Kanal und Nachricht für neue Mitglieder fest",
-    welcomeChannelName: "kanal",
-    welcomeChannelDescription: "Wo Nexo neue Mitglieder begrüßt",
-    welcomeMessageName: "nachricht",
-    welcomeMessageDescription: "Platzhalter: {user} {username} {server} {membercount}",
-    welcomePingName: "erwähnen",
-    welcomePingDescription:
+    greetingSetupName: "einrichten",
+    greetingTestName: "testen",
+    greetingOffName: "aus",
+    greetingChannelName: "kanal",
+    greetingMessageName: "nachricht",
+    greetingMessageDescription: "Platzhalter: {user} {username} {server} {membercount}",
+    greetingPingName: "erwähnen",
+    greetingPingDescription:
         "Das neue Mitglied über der Karte erwähnen, damit es benachrichtigt wird",
-    welcomeTestName: "testen",
-    welcomeTestDescription: "Schickt die Begrüßung für dich, zum Ausprobieren",
-    welcomeOffName: "aus",
-    welcomeOffDescription: "Schaltet die Begrüßung aus",
-    defaultWelcome: "Willkommen auf **{server}**, {user}! Du bist unser {membercount}. Mitglied.",
-    welcomeSaved: (channel: string) =>
-        `Neue Mitglieder werden jetzt in ${channel} begrüßt. ` +
-        "Probier es mit `/welcome testen` aus.",
-    welcomeNotSetUp: "Die Begrüßung ist noch nicht eingerichtet: nutze `/welcome einrichten`.",
-    welcomeTestSent: (channel: string) => `In ${channel} geschickt.`,
-    welcomeOff: "Die Begrüßung ist aus.",
-    welcomeChannelGone:
-        "Den Begrüßungskanal gibt es nicht mehr. Wähle mit `/welcome einrichten` einen neuen.",
-    welcomeCannotPost: (channel: string, missing: string) =>
+    greetingTryIt: (test: string) => `Probier es mit \`${test}\` aus.`,
+    greetingTestSent: (channel: string) => `In ${channel} geschickt.`,
+    greetingNotSetUp: (setup: string) => `Das ist noch nicht eingerichtet: nutze \`${setup}\`.`,
+    greetingChannelGone: (setup: string) =>
+        `Der Kanal dafür ist weg. Wähle mit \`${setup}\` einen neuen.`,
+    greetingCannotPost: (channel: string, missing: string) =>
         `Nexo kann in ${channel} noch nicht schreiben. Gib ihm dort diese Rechte: ${missing}.`,
     permissionNames: {
         ViewChannel: "Kanal ansehen",
         SendMessages: "Nachrichten senden",
         EmbedLinks: "Links einbetten",
     },
+    welcome: {
+        description: "Begrüßt neue Mitglieder in einem Kanal",
+        setupDescription: "Legt Kanal und Nachricht für neue Mitglieder fest",
+        channelDescription: "Wo Nexo neue Mitglieder begrüßt",
+        testDescription: "Schickt die Begrüßung für dich, zum Ausprobieren",
+        offDescription: "Schaltet die Begrüßung aus",
+        defaultMessage:
+            "Willkommen auf **{server}**, {user}! Du bist unser {membercount}. Mitglied.",
+        saved: (channel: string) => `Neue Mitglieder werden jetzt in ${channel} begrüßt.`,
+        off: "Die Begrüßung ist aus.",
+    },
+    goodbye: {
+        description: "Verabschiedet Mitglieder in einem Kanal, wenn sie gehen",
+        setupDescription: "Legt Kanal und Nachricht für Mitglieder fest, die gehen",
+        channelDescription: "Wo Nexo sich verabschiedet",
+        testDescription: "Schickt den Abschied für dich, zum Ausprobieren",
+        offDescription: "Schaltet den Abschied aus",
+        defaultMessage:
+            "**{username}** hat den Server verlassen. Wir sind jetzt {membercount} Mitglieder.",
+        saved: (channel: string) => `Wer geht, wird jetzt in ${channel} verabschiedet.`,
+        off: "Der Abschied ist aus.",
+    },
+    autoroleDescription: "Gibt neuen Mitgliedern automatisch Rollen",
+    autoroleAddName: "hinzufügen",
+    autoroleAddDescription: "Fügt eine Rolle hinzu, die neue Mitglieder bekommen",
+    autoroleRemoveName: "entfernen",
+    autoroleRemoveDescription: "Nimmt eine Rolle aus der automatischen Vergabe",
+    autoroleListName: "liste",
+    autoroleListDescription: "Zeigt die Rollen, die neue Mitglieder bekommen",
+    roleOptionName: "rolle",
+    roleOptionDescription: "Die Rolle",
+    autoroleAdded: (role: string) => `Neue Mitglieder bekommen jetzt ${role}.`,
+    autoroleAlready: (role: string) => `Neue Mitglieder bekommen ${role} schon.`,
+    autoroleRemoved: (role: string) => `Neue Mitglieder bekommen ${role} nicht mehr.`,
+    autoroleNotThere: (role: string) => `${role} gehört nicht zu den automatischen Rollen.`,
+    autoroleNone:
+        "Neue Mitglieder bekommen noch keine Rollen. Füge eine mit `/autorole hinzufügen` hinzu.",
+    autoroleListTitle: "Rollen für neue Mitglieder",
+    autoroleEveryone: "@everyone hat jedes Mitglied schon.",
+    autoroleManaged: (role: string) =>
+        `${role} gehört zu einer Integration, etwa einem Bot oder Server-Boosts; die vergibt ` +
+        `Discord selbst.`,
+    autoroleNoPermission:
+        "Nexo braucht dafür das Recht „Rollen verwalten“: gib es Nexos Rolle in den " +
+        "Servereinstellungen.",
+    autoroleTooHigh: (role: string) =>
+        `${role} steht über Nexos höchster Rolle. Zieh in den Servereinstellungen unter Rollen ` +
+        `Nexos Rolle darüber.`,
 };

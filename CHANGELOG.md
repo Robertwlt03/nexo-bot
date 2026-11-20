@@ -13,6 +13,11 @@ All notable changes to this project are listed here. The format follows
 - `/serverinfo`, `/userinfo` and `/avatar`: the server, a member and a member's profile picture.
 - `/welcome`: a welcome card for new members in a channel, with the placeholders `{user}`,
   `{username}`, `{server}` and `{membercount}`. Needs the Server Members Intent.
+- `/goodbye`: the same card when someone leaves, for every member, also those who joined before
+  the bot started.
+- `/autorole`: roles that new members get on joining. Nexo checks each role when it is added and
+  names what stands in the way: @everyone, a role of an integration, Manage Roles, or a role
+  above Nexo's own.
 
 ### Changed
 
