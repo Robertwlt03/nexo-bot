@@ -1,0 +1,29 @@
+{
+  "name": "nexo-bot",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Nexo, a Discord bot for communities.",
+  "license": "MIT",
+  "author": "Robert Walter",
+  "type": "module",
+  "engines": {
+    "node": ">=26"
+  },
+  "dependencies": {
+    "discord.js": "14.28.1"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.8",
+    "@types/node": "26.6.6",
+    "typescript": "7.0.2",
+    "vitest": "5.1.1"
+  },
+  "packageManager": "pnpm@12.21.0",
+  "scripts": {
+    "start": "node --env-file-if-exists=.env src/main.ts",
+    "dev": "node --env-file-if-exists=.env --watch src/main.ts",
+    "check": "biome check && tsc",
+    "format": "biome check --write",
+    "test": "vitest run"
+  }
+}

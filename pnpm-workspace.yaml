@@ -1,0 +1,3 @@
+saveExact: true
+# pnpm refuses to install on a Node.js older than package.json engines names (26, for type stripping).
+engineStrict: true

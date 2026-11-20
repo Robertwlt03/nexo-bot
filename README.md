@@ -1,0 +1,70 @@
+<p align="center">
+  <img src="assets/banner-readme.svg" alt="Nexo: One bot. Every feature." width="100%">
+</p>
+
+Nexo is a Discord bot for communities. It is being rebuilt from scratch, one feature at a time:
+each command is tried on a real server before the next one lands. It answers in German or English,
+in the language of each member's Discord.
+
+## <img src="assets/icons/features.svg" height="33" align="absmiddle" alt="">What it does
+
+| Command | What it does                                                                  |
+|---------|-------------------------------------------------------------------------------|
+| `/ping` | Shows how fast Nexo answers: the round trip and the connection to Discord     |
+| `/info` | Shows the version, how many servers use Nexo, and how long it has been online |
+| `/help` | Lists every command with its description                                      |
+
+## <img src="assets/icons/install.svg" height="33" align="absmiddle" alt="">Install
+
+You need [Node.js 26](https://nodejs.org) and [pnpm](https://pnpm.io).
+
+1. **Create the bot.** In the
+   [Discord Developer Portal](https://discord.com/developers/applications), choose
+   _New Application_ and name it, such as _Nexo Test_. Under _Bot_, choose _Reset Token_ and copy
+   the token. A new application is best: one an older bot used still lists that bot's commands,
+   which Nexo then answers with "Nexo doesn't have this command (anymore)".
+2. **Fill in the settings.** Copy `.env.example` to `.env` and paste the token after
+   `DISCORD_TOKEN=`. For a test server, turn on _Developer Mode_ in Discord's settings under
+   _Advanced_, right-click your server, choose _Copy Server ID_ and paste it after `GUILD_ID=`.
+3. **Invite it.** Under _OAuth2_, open the _URL Generator_, tick the scopes `bot` and
+   `applications.commands` and the permissions _Send Messages_ and _Embed Links_, open the URL and
+   pick your server.
+4. **Start it.**
+
+   ```bash
+   pnpm install
+   pnpm dev
+   ```
+
+   The console shows `Nexo#1234 is online with 3 commands`. `pnpm dev` restarts the bot whenever
+   a file changes; `pnpm start` runs it once.
+
+## <img src="assets/icons/use.svg" height="33" align="absmiddle" alt="">Use
+
+Type `/` in any channel of your server and pick one of Nexo's commands. With `GUILD_ID` set, the
+commands appear on that server at once. Without it, they are registered for every server the bot
+is in, which can take Discord a moment.
+
+## <img src="assets/icons/how.svg" height="33" align="absmiddle" alt="">How it works
+
+- Node.js 26 runs the TypeScript in `src/` directly, so there is no build step.
+- `src/commands/index.ts` lists every command. When the bot starts, it registers that list with
+  Discord and answers each slash command with the matching one.
+- `src/texts.ts` holds every text in English; `src/translations/de.ts` holds the German ones.
+  Each answer picks the language of the member's Discord.
+- The bot only asks Discord for the server list (the `Guilds` intent), no privileged intents.
+
+## <img src="assets/icons/contribute.svg" height="33" align="absmiddle" alt="">Contribute
+
+```bash
+pnpm check    # Biome and TypeScript
+pnpm test     # Vitest
+pnpm format   # Biome fixes what it can
+```
+
+CI runs the same checks, plus [check-pipeline](https://github.com/Robertwlt03/check-pipeline) for
+secrets, links and texts. `CLAUDE.md` holds the rules this repository follows.
+
+## <img src="assets/icons/license.svg" height="33" align="absmiddle" alt="">License
+
+[MIT](LICENSE)

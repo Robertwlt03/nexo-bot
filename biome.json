@@ -1,0 +1,9 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+  "formatter": { "indentStyle": "space", "indentWidth": 4, "lineWidth": 100 },
+  "linter": { "rules": { "preset": "recommended" } },
+  "json": { "formatter": { "indentWidth": 2 } },
+  "yaml": { "formatter": { "indentWidth": 2 } },
+  "markdown": { "formatter": { "enabled": false } }
+}

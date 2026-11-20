@@ -1,0 +1,9 @@
+# The repository checks of nexo-bot, with check-pipeline; CI runs the same ones. Format, lint,
+# types and tests are pnpm's (pnpm check, pnpm test).
+name = "nexo-bot"
+steps = ["secrets", "security", "duplicates", "guides", "files", "english", "commits"]
+
+[swift]
+# The one place German belongs: the bot's German texts. (check-pipeline keeps this setting
+# under [swift]; it is a plain folder.)
+translations = "src/translations"
