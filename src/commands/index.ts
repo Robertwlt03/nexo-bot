@@ -4,9 +4,11 @@ import type { Command } from "./command.ts";
 import { goodbye, welcome } from "./greeting.ts";
 import { help } from "./help.ts";
 import { info } from "./info.ts";
+import { ban, kick, timeout, unban, untimeout } from "./moderation.ts";
 import { ping } from "./ping.ts";
 import { serverinfo } from "./serverinfo.ts";
 import { userinfo } from "./userinfo.ts";
+import { unwarn, warn, warnings } from "./warnings.ts";
 
 /** Every command the bot registers with Discord; /help lists this same list, itself included. */
 export const commands: Command[] = [
@@ -18,5 +20,13 @@ export const commands: Command[] = [
     welcome,
     goodbye,
     autorole,
+    warn,
+    warnings,
+    unwarn,
+    timeout,
+    untimeout,
+    kick,
+    ban,
+    unban,
 ];
 commands.push(help(commands));

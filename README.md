@@ -18,6 +18,11 @@ in the language of each member's Discord.
 | `/welcome`    | Greets new members in a channel: `setup`, `test`, `off`; for admins           |
 | `/goodbye`    | Says goodbye in a channel when someone leaves: `setup`, `test`, `off`         |
 | `/autorole`   | Gives new members roles: `add`, `remove`, `list`; for admins                  |
+| `/warn`       | Warns a member with a reason; Nexo keeps the warning                          |
+| `/warnings`   | Shows a member's warnings, numbered; `/unwarn` removes one                    |
+| `/timeout`    | Mutes a member for 5 minutes up to a week; `/untimeout` ends it               |
+| `/kick`       | Removes a member from the server; they can join again                         |
+| `/ban`        | Bans someone, also before they join; `/unban` lifts it                        |
 | `/help`       | Lists every command with its description                                      |
 
 ## <img src="assets/icons/install.svg" height="33" align="absmiddle" alt="">Install
@@ -35,8 +40,9 @@ You need [Node.js 26](https://nodejs.org) and [pnpm](https://pnpm.io).
    `DISCORD_TOKEN=`. For a test server, turn on _Developer Mode_ in Discord's settings under
    _Advanced_, right-click your server, choose _Copy Server ID_ and paste it after `GUILD_ID=`.
 3. **Invite it.** Under _OAuth2_, open the _URL Generator_, tick the scopes `bot` and
-   `applications.commands` and the permissions _Send Messages_, _Embed Links_ and, for automatic
-   roles, _Manage Roles_, open the URL and pick your server. Nexo can only give roles below its own
+   `applications.commands` and the permissions _Send Messages_, _Embed Links_, _Manage Roles_ (for
+   automatic roles) and _Timeout Members_, _Kick Members_ and _Ban Members_ (for moderation), open
+   the URL and pick your server. Nexo can only give roles below its own
    highest role: in the server settings under _Roles_, drag Nexo's role above them.
 4. **Start it.**
 
@@ -45,7 +51,7 @@ You need [Node.js 26](https://nodejs.org) and [pnpm](https://pnpm.io).
    pnpm dev
    ```
 
-   The console shows `Nexo#1234 is online with 9 commands`. `pnpm dev` restarts the bot whenever
+   The console shows `Nexo#1234 is online with 17 commands`. `pnpm dev` restarts the bot whenever
    a file changes; `pnpm start` runs it once.
 
 ## <img src="assets/icons/use.svg" height="33" align="absmiddle" alt="">Use
@@ -65,8 +71,12 @@ is in, which can take Discord a moment.
   roles, for members joining and leaving (`GuildMembers`, the privileged _Server Members Intent_).
 - `/welcome` and `/goodbye` are one command built twice (`src/commands/greeting.ts`); both post
   the same card (`src/greeting.ts`).
-- Each server's settings, such as its welcome and its automatic roles, sit in an SQLite file,
-  `data/nexo.sqlite` (or `DATABASE_PATH`), through the SQLite that Node.js brings along.
+- Moderation checks the role order itself (`src/moderation.ts`): Discord only checks that a
+  moderator has the permission, so without it someone could act through Nexo on a member who
+  ranks above them. Nobody can act on themselves, on Nexo or on the server's owner.
+- Each server's settings, such as its welcome, its automatic roles and its warnings, sit in an
+  SQLite file, `data/nexo.sqlite` (or `DATABASE_PATH`), through the SQLite that Node.js brings
+  along.
 
 ## <img src="assets/icons/contribute.svg" height="33" align="absmiddle" alt="">Contribute
 

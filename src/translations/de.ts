@@ -96,7 +96,67 @@ export const de: Texts = {
     autoroleNoPermission:
         "Nexo braucht dafür das Recht „Rollen verwalten“: gib es Nexos Rolle in den " +
         "Servereinstellungen.",
+    autoroleAboveYou: (role: string) =>
+        `${role} steht nicht unter deiner höchsten Rolle, darum kannst du sie nicht vergeben.`,
     autoroleTooHigh: (role: string) =>
         `${role} steht über Nexos höchster Rolle. Zieh in den Servereinstellungen unter Rollen ` +
         `Nexos Rolle darüber.`,
+    moderationMemberName: "mitglied",
+    moderationMemberDescription: "Das Mitglied",
+    reasonName: "grund",
+    reasonDescription: "Warum; steht auch im Audit-Log des Servers",
+    durationName: "dauer",
+    durationDescription: "Wie lange",
+    durations: [
+        { name: "5 Minuten", minutes: 5 },
+        { name: "10 Minuten", minutes: 10 },
+        { name: "30 Minuten", minutes: 30 },
+        { name: "1 Stunde", minutes: 60 },
+        { name: "6 Stunden", minutes: 360 },
+        { name: "1 Tag", minutes: 1440 },
+        { name: "1 Woche", minutes: 10080 },
+    ],
+    numberName: "nummer",
+    numberDescription: "Die Nummer, die /warnings zeigt",
+    userName: "nutzer",
+    unbanUserDescription: "Der gebannte Nutzer; füge die ID ein, wenn er nicht erscheint",
+    warnDescription: "Verwarnt ein Mitglied; Nexo merkt sich die Verwarnung",
+    warningsDescription: "Zeigt die Verwarnungen eines Mitglieds",
+    unwarnDescription: "Entfernt eine Verwarnung",
+    timeoutDescription: "Schaltet ein Mitglied eine Zeit lang stumm",
+    untimeoutDescription: "Hebt die Stummschaltung eines Mitglieds vorzeitig auf",
+    kickDescription: "Entfernt ein Mitglied vom Server; es kann wieder beitreten",
+    banDescription: "Sperrt jemanden vom Server",
+    unbanDescription: "Hebt einen Bann auf",
+    warned: (member: string, count: number) =>
+        `${member} ist verwarnt. Verwarnungen bisher: ${count}.`,
+    warningsNone: (member: string) => `${member} hat keine Verwarnungen.`,
+    warningsTitle: (name: string) => `Verwarnungen von ${name}`,
+    warningBy: "von",
+    unwarned: (id: number) => `Verwarnung #${id} ist entfernt.`,
+    unwarnNotFound: (id: number) => `Auf diesem Server gibt es keine Verwarnung #${id}.`,
+    timedOut: (member: string, until: string) => `${member} ist stummgeschaltet bis ${until}.`,
+    untimedOut: (member: string) => `${member} kann wieder schreiben.`,
+    notTimedOut: (member: string) => `${member} ist nicht stummgeschaltet.`,
+    kicked: (member: string) => `${member} ist vom Server entfernt.`,
+    banned: (user: string) => `${user} ist gebannt.`,
+    unbanned: (user: string) => `Der Bann von ${user} ist aufgehoben.`,
+    notBanned: (user: string) => `${user} ist nicht gebannt.`,
+    notMember: (user: string) => `${user} ist nicht auf diesem Server.`,
+    problemSelf: "Das kannst du nicht bei dir selbst tun.",
+    problemNexo: "Das tut Nexo sich nicht selbst an.",
+    problemOwner: "Das kann niemand beim Inhaber des Servers tun.",
+    problemAboveYou: (member: string) =>
+        `Die höchste Rolle von ${member} steht nicht unter deiner.`,
+    problemAdmin: (member: string) =>
+        `${member} ist Administrator, und Administratoren kann Discord nicht stummschalten.`,
+    problemNoPermission: (permission: string) => `Nexo braucht dafür das Recht „${permission}“.`,
+    problemAboveNexo: (member: string) =>
+        `Die höchste Rolle von ${member} steht nicht unter Nexos. ` +
+        "Zieh in den Servereinstellungen unter Rollen Nexos Rolle darüber.",
+    moderationPermissionNames: {
+        timeout: "Mitglieder im Timeout",
+        kick: "Mitglieder kicken, annehmen und ablehnen",
+        ban: "Mitglieder bannen",
+    },
 };

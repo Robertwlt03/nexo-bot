@@ -6,6 +6,7 @@ describe("firstWithRest", () => {
         expect(firstWithRest([], 2)).toBe("");
         expect(firstWithRest(["a", "b"], 2)).toBe("a b");
         expect(firstWithRest(["a", "b", "c"], 2)).toBe("a b +1");
+        expect(firstWithRest(["a", "b", "c"], 2, "\n")).toBe("a\nb\n+1");
     });
 });
 

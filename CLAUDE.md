@@ -26,6 +26,10 @@
 - Read the docs of the versions in use (the installed typings first) before using an API; avoid
   what they mark deprecated, such as `ephemeral: true` (use `flags: MessageFlags.Ephemeral`).
 - Never commit `.env` or a token.
+- Discord checks only that someone has a permission, never the role order. So whenever Nexo acts
+  on Discord for someone, it checks that the target (a member or a role) ranks below that
+  person, as Discord's own settings would: `moderationProblem` for moderation, `autoroleProblem`
+  for automatic roles. Otherwise anyone could use Nexo to reach above their own rank.
 
 ## Where things go
 
@@ -33,7 +37,7 @@
 - Commands: one file each in `src/commands/`, listed in `src/commands/index.ts`
 - Answer cards: `src/card.ts`; texts: `src/texts.ts` and `src/translations/`
 - Each server's settings: `src/settings.ts` (SQLite); welcome and goodbye: `src/greeting.ts`;
-  automatic roles: `src/autorole.ts`
+  automatic roles: `src/autorole.ts`; moderation checks: `src/moderation.ts`
 - Tests: `tests/`; README graphics: `assets/`
 
 ## Before every commit

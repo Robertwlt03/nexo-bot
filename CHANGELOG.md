@@ -16,8 +16,11 @@ All notable changes to this project are listed here. The format follows
 - `/goodbye`: the same card when someone leaves, for every member, also those who joined before
   the bot started.
 - `/autorole`: roles that new members get on joining. Nexo checks each role when it is added and
-  names what stands in the way: @everyone, a role of an integration, Manage Roles, or a role
-  above Nexo's own.
+  names what stands in the way: @everyone, a role of an integration, a role not below the
+  asker's own, Manage Roles, or a role above Nexo's own.
+- Moderation: `/warn`, `/warnings` and `/unwarn`, `/timeout` and `/untimeout`, `/kick`, `/ban` and
+  `/unban`. Nexo refuses to act on the moderator, itself, the owner or anyone who ranks as high
+  as the moderator, and writes the moderator's name into the audit log with the reason.
 
 ### Changed
 

@@ -14,6 +14,11 @@ export type GreetingSettings = { channelId: string; message: string; ping: boole
 
 type GreetingRow = { channel_id: string; message: string; ping: number };
 
+/** A warning a moderator gave, kept until someone removes it. */
+export type Warning = { id: number; moderatorId: string; reason: string; createdAt: Date };
+
+type WarningRow = { id: number; moderator_id: string; reason: string; created_at: number };
+
 /** Each server's settings, kept in one SQLite file; ":memory:" keeps them only while running. */
 export function openSettings(path: string) {
     if (path !== ":memory:") mkdirSync(dirname(path), { recursive: true });
@@ -27,6 +32,14 @@ export function openSettings(path: string) {
             ping INTEGER NOT NULL
         )`);
     }
+    database.exec(`CREATE TABLE IF NOT EXISTS warning (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        guild_id TEXT NOT NULL,
+        user_id TEXT NOT NULL,
+        moderator_id TEXT NOT NULL,
+        reason TEXT NOT NULL,
+        created_at INTEGER NOT NULL
+    )`);
     database.exec(`CREATE TABLE IF NOT EXISTS autorole (
         guild_id TEXT NOT NULL,
         role_id TEXT NOT NULL,
@@ -54,6 +67,14 @@ export function openSettings(path: string) {
     const selectRoles = database.prepare("SELECT role_id FROM autorole WHERE guild_id = ?");
     const addRole = database.prepare("INSERT OR IGNORE INTO autorole VALUES (?, ?)");
     const removeRole = database.prepare("DELETE FROM autorole WHERE guild_id = ? AND role_id = ?");
+    const addWarning = database.prepare(
+        `INSERT INTO warning (guild_id, user_id, moderator_id, reason, created_at)
+            VALUES (?, ?, ?, ?, ?)`,
+    );
+    const selectWarnings =
+        database.prepare(`SELECT id, moderator_id, reason, created_at FROM warning
+        WHERE guild_id = ? AND user_id = ? ORDER BY id DESC`);
+    const removeWarning = database.prepare("DELETE FROM warning WHERE guild_id = ? AND id = ?");
 
     return {
         greeting(kind: GreetingKind, guildId: string): GreetingSettings | undefined {
@@ -78,6 +99,25 @@ export function openSettings(path: string) {
         /** False when the role was not in the list. */
         removeAutorole(guildId: string, roleId: string): boolean {
             return removeRole.run(guildId, roleId).changes > 0;
+        },
+        /** Keeps a warning and gives back its number, which /unwarn takes. */
+        addWarning(guildId: string, userId: string, moderatorId: string, reason: string): number {
+            return Number(
+                addWarning.run(guildId, userId, moderatorId, reason, Date.now()).lastInsertRowid,
+            );
+        },
+        /** A member's warnings on a server, newest first. */
+        warnings(guildId: string, userId: string): Warning[] {
+            return (selectWarnings.all(guildId, userId) as WarningRow[]).map((row) => ({
+                id: row.id,
+                moderatorId: row.moderator_id,
+                reason: row.reason,
+                createdAt: new Date(row.created_at),
+            }));
+        },
+        /** False when the server has no warning with this number. */
+        removeWarning(guildId: string, id: number): boolean {
+            return removeWarning.run(guildId, id).changes > 0;
         },
     };
 }

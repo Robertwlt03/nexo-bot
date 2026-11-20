@@ -63,3 +63,27 @@ describe("automatic roles", () => {
         expect(settings.autoroles("other")).toEqual(["c"]);
     });
 });
+
+describe("warnings", () => {
+    it("are kept per server and member, newest first, and removed by number", () => {
+        const settings = openSettings(":memory:");
+        const first = settings.addWarning("server", "lena", "mod", "spam");
+        const second = settings.addWarning("server", "lena", "mod", "insults");
+        settings.addWarning("other", "lena", "mod", "elsewhere");
+
+        expect(settings.warnings("server", "lena").map((w) => w.reason)).toEqual([
+            "insults",
+            "spam",
+        ]);
+        expect(settings.warnings("server", "lena")[0]).toMatchObject({
+            id: second,
+            moderatorId: "mod",
+        });
+        expect(settings.warnings("server", "nobody")).toEqual([]);
+
+        expect(settings.removeWarning("other", first)).toBe(false); // a number from another server
+        expect(settings.removeWarning("server", first)).toBe(true);
+        expect(settings.removeWarning("server", first)).toBe(false);
+        expect(settings.warnings("server", "lena").map((w) => w.id)).toEqual([second]);
+    });
+});

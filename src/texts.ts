@@ -94,9 +94,68 @@ export const en = {
     autoroleNoPermission:
         "Nexo needs the permission Manage Roles for this: give it to Nexo's role in the server " +
         "settings.",
+    autoroleAboveYou: (role: string) =>
+        `${role} is not below your highest role, so you can't hand it out.`,
     autoroleTooHigh: (role: string) =>
         `${role} is above Nexo's highest role. In the server settings under Roles, drag Nexo's ` +
         `role above it.`,
+    moderationMemberName: "member",
+    moderationMemberDescription: "The member",
+    reasonName: "reason",
+    reasonDescription: "Why; it also goes into the server's audit log",
+    durationName: "duration",
+    durationDescription: "How long",
+    durations: [
+        { name: "5 minutes", minutes: 5 },
+        { name: "10 minutes", minutes: 10 },
+        { name: "30 minutes", minutes: 30 },
+        { name: "1 hour", minutes: 60 },
+        { name: "6 hours", minutes: 360 },
+        { name: "1 day", minutes: 1440 },
+        { name: "1 week", minutes: 10080 },
+    ],
+    numberName: "number",
+    numberDescription: "The number /warnings shows",
+    userName: "user",
+    unbanUserDescription: "The banned user; paste the ID if they don't show up",
+    warnDescription: "Warns a member; Nexo keeps the warning",
+    warningsDescription: "Shows a member's warnings",
+    unwarnDescription: "Removes a warning",
+    timeoutDescription: "Mutes a member for a while",
+    untimeoutDescription: "Ends a member's timeout early",
+    kickDescription: "Removes a member from the server; they can join again",
+    banDescription: "Bans someone from the server",
+    unbanDescription: "Lifts a ban",
+    warned: (member: string, count: number) => `${member} is warned. Warnings so far: ${count}.`,
+    warningsNone: (member: string) => `${member} has no warnings.`,
+    warningsTitle: (name: string) => `Warnings of ${name}`,
+    warningBy: "by",
+    unwarned: (id: number) => `Warning #${id} is removed.`,
+    unwarnNotFound: (id: number) => `This server has no warning #${id}.`,
+    timedOut: (member: string, until: string) => `${member} is muted until ${until}.`,
+    untimedOut: (member: string) => `${member} can write again.`,
+    notTimedOut: (member: string) => `${member} is not muted.`,
+    kicked: (member: string) => `${member} is removed from the server.`,
+    banned: (user: string) => `${user} is banned.`,
+    unbanned: (user: string) => `The ban on ${user} is lifted.`,
+    notBanned: (user: string) => `${user} is not banned.`,
+    notMember: (user: string) => `${user} is not on this server.`,
+    problemSelf: "You can't do this to yourself.",
+    problemNexo: "Nexo won't do this to itself.",
+    problemOwner: "Nobody can do this to the server's owner.",
+    problemAboveYou: (member: string) => `${member}'s highest role is not below yours.`,
+    problemAdmin: (member: string) =>
+        `${member} is an administrator, and Discord can't mute those.`,
+    problemNoPermission: (permission: string) =>
+        `Nexo needs the permission ${permission} for this.`,
+    problemAboveNexo: (member: string) =>
+        `${member}'s highest role is not below Nexo's. In the server settings under Roles, ` +
+        "drag Nexo's role above it.",
+    moderationPermissionNames: {
+        timeout: "Timeout Members",
+        kick: "Kick, Approve, and Reject Members",
+        ban: "Ban Members",
+    },
 };
 
 export type Texts = typeof en;

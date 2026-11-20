@@ -69,13 +69,23 @@ export const autorole: Command = {
             case en.autoroleAddName: {
                 const role = interaction.options.getRole(en.roleOptionName, true);
                 const mention = roleMention(role.id);
-                const canManageRoles =
-                    guild.members.me?.permissions.has(PermissionFlagsBits.ManageRoles) ?? false;
-                switch (autoroleProblem(role, guildId, canManageRoles)) {
+                const asker = interaction.member;
+                switch (
+                    autoroleProblem(role, guildId, {
+                        askerAboveRole:
+                            asker.id === guild.ownerId ||
+                            asker.roles.highest.comparePositionTo(role) > 0,
+                        canManageRoles:
+                            guild.members.me?.permissions.has(PermissionFlagsBits.ManageRoles) ??
+                            false,
+                    })
+                ) {
                     case "everyone":
                         return answer(t.autoroleEveryone);
                     case "managed":
                         return answer(t.autoroleManaged(mention));
+                    case "above-you":
+                        return answer(t.autoroleAboveYou(mention));
                     case "no-permission":
                         return answer(t.autoroleNoPermission);
                     case "too-high":
