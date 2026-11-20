@@ -23,6 +23,10 @@ All notable changes to this project are listed here. The format follows
 - Moderation: `/warn`, `/warnings` and `/unwarn`, `/timeout` and `/untimeout`, `/kick`, `/ban` and
   `/unban`. Nexo refuses to act on the moderator, itself, the owner or anyone who ranks as high
   as the moderator, and writes the moderator's name into the audit log with the reason.
+- `/modlog`: a channel where Nexo posts a card for every moderation command: the action, the
+  member with their ID, the moderator, the reason, and the end of a timeout or a warning's
+  number. Nexo answers the moderator first; if the card can't be posted, a private follow-up
+  says why. A public log channel gets a note when it is set up.
 
 ### Changed
 

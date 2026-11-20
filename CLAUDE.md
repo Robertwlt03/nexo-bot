@@ -37,7 +37,8 @@
 - Commands: one file each in `src/commands/`, listed in `src/commands/index.ts`
 - Answer cards: `src/card.ts`; texts: `src/texts.ts` and `src/translations/`
 - Each server's settings: `src/settings.ts` (SQLite); welcome and goodbye: `src/greeting.ts`;
-  automatic roles: `src/autorole.ts`; moderation checks: `src/moderation.ts`; level math:
+  automatic roles: `src/autorole.ts`; moderation checks: `src/moderation.ts`; mod log:
+  `src/modlog.ts`; posting in a server's channel: `src/channel.ts`; level math:
   `src/leveling.ts`
 - Tests: `tests/`; README graphics: `assets/`
 

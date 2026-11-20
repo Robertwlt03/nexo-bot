@@ -23,6 +23,7 @@ in the language of each member's Discord.
 | `/timeout`     | Mutes a member for 5 minutes up to a week; `/untimeout` ends it               |
 | `/kick`        | Removes a member from the server; they can join again                         |
 | `/ban`         | Bans someone, also before they join; `/unban` lifts it                        |
+| `/modlog`      | Logs every moderation command in a channel: `setup`, `off`; for admins        |
 | `/rank`        | Shows a member's level, rank and XP, or yours                                 |
 | `/leaderboard` | Shows the ten members with the most XP                                        |
 | `/help`        | Lists every command with its description                                      |
@@ -53,7 +54,7 @@ You need [Node.js 26](https://nodejs.org) and [pnpm](https://pnpm.io).
    pnpm dev
    ```
 
-   The console shows `Nexo#1234 is online with 19 commands`. `pnpm dev` restarts the bot whenever
+   The console shows `Nexo#1234 is online with 20 commands`. `pnpm dev` restarts the bot whenever
    a file changes; `pnpm start` runs it once.
 
 ## <img src="assets/icons/use.svg" height="33" align="absmiddle" alt="">Use
@@ -77,6 +78,11 @@ is in, which can take Discord a moment.
   5·_L_² + 50·_L_ + 50 more XP (`src/leveling.ts`). Nexo only learns that someone wrote
   (`GuildMessages`), never what: it does without the privileged _Message Content Intent_.
   XP stays when someone leaves, so a member who comes back keeps their level.
+- Every moderation command posts a card in the mod log, if the server has one (`src/modlog.ts`):
+  what, whom (with the ID, which still reads after they left), by whom and why, in the language
+  of the moderator's Discord. Nexo answers the moderator first and posts the card after, so a
+  slow channel never makes the command fail. What moderators do in Discord itself, without Nexo,
+  stays in Discord's audit log.
 - Moderation checks the role order itself (`src/moderation.ts`): Discord only checks that a
   moderator has the permission, so without it someone could act through Nexo on a member who
   ranks above them. Nobody can act on themselves, on Nexo or on the server's owner.

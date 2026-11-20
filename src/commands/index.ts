@@ -6,6 +6,7 @@ import { help } from "./help.ts";
 import { info } from "./info.ts";
 import { leaderboard, rank } from "./levels.ts";
 import { ban, kick, timeout, unban, untimeout } from "./moderation.ts";
+import { modlog } from "./modlog.ts";
 import { ping } from "./ping.ts";
 import { serverinfo } from "./serverinfo.ts";
 import { userinfo } from "./userinfo.ts";
@@ -29,6 +30,7 @@ export const commands: Command[] = [
     kick,
     ban,
     unban,
+    modlog,
     rank,
     leaderboard,
 ];

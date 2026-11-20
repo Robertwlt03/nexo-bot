@@ -46,6 +46,10 @@ export function openSettings(path: string) {
         total_xp INTEGER NOT NULL,
         PRIMARY KEY (guild_id, user_id)
     )`);
+    database.exec(`CREATE TABLE IF NOT EXISTS modlog (
+        guild_id TEXT PRIMARY KEY,
+        channel_id TEXT NOT NULL
+    )`);
     database.exec(`CREATE TABLE IF NOT EXISTS autorole (
         guild_id TEXT NOT NULL,
         role_id TEXT NOT NULL,
@@ -80,7 +84,13 @@ export function openSettings(path: string) {
     const selectWarnings =
         database.prepare(`SELECT id, moderator_id, reason, created_at FROM warning
         WHERE guild_id = ? AND user_id = ? ORDER BY id DESC`);
-    const removeWarning = database.prepare("DELETE FROM warning WHERE guild_id = ? AND id = ?");
+    const removeWarning = database.prepare(
+        "DELETE FROM warning WHERE guild_id = ? AND id = ? RETURNING user_id",
+    );
+    const selectModlog = database.prepare("SELECT channel_id FROM modlog WHERE guild_id = ?");
+    const saveModlog = database.prepare(`INSERT INTO modlog VALUES (?, ?)
+        ON CONFLICT (guild_id) DO UPDATE SET channel_id = excluded.channel_id`);
+    const removeModlog = database.prepare("DELETE FROM modlog WHERE guild_id = ?");
     const addXp = database.prepare(`INSERT INTO xp VALUES (?, ?, ?)
         ON CONFLICT (guild_id, user_id) DO UPDATE SET total_xp = total_xp + excluded.total_xp
         RETURNING total_xp`);
@@ -134,9 +144,19 @@ export function openSettings(path: string) {
                 createdAt: new Date(row.created_at),
             }));
         },
-        /** False when the server has no warning with this number. */
-        removeWarning(guildId: string, id: number): boolean {
-            return removeWarning.run(guildId, id).changes > 0;
+        /** Whom the removed warning was for; undefined when the server has no such number. */
+        removeWarning(guildId: string, id: number): string | undefined {
+            return (removeWarning.get(guildId, id) as { user_id: string } | undefined)?.user_id;
+        },
+        /** The channel where Nexo logs what moderators do; undefined when it logs nothing. */
+        modlogChannel(guildId: string): string | undefined {
+            return (selectModlog.get(guildId) as { channel_id: string } | undefined)?.channel_id;
+        },
+        saveModlogChannel(guildId: string, channelId: string): void {
+            saveModlog.run(guildId, channelId);
+        },
+        removeModlogChannel(guildId: string): void {
+            removeModlog.run(guildId);
         },
         /** Adds XP to a member and gives back their new total. */
         addXp(guildId: string, userId: string, amount: number): number {

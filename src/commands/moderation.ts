@@ -10,6 +10,7 @@ import {
     userMention,
 } from "discord.js";
 import { factsFor, moderationProblem } from "../moderation.ts";
+import { logModeration } from "../modlog.ts";
 import { en, texts } from "../texts.ts";
 import { de } from "../translations/de.ts";
 import type { Command } from "./command.ts";
@@ -63,7 +64,7 @@ export const timeout: Command = {
         )
         .addStringOption(reasonOption(false)),
 
-    async run(interaction) {
+    async run(interaction, { settings }) {
         const t = texts(interaction.locale);
         if (!interaction.inCachedGuild()) return answer(interaction, t.serverOnly);
         const target = checkedMember(interaction, "timeout", t);
@@ -72,10 +73,10 @@ export const timeout: Command = {
         const reason = interaction.options.getString(en.reasonName);
         await target.timeout(minutes * MINUTE, auditReason(interaction.member, reason));
         const until = new Date(Date.now() + minutes * MINUTE);
-        return answer(
-            interaction,
-            t.timedOut(userMention(target.id), time(until, TimestampStyles.LongDateShortTime)),
-        );
+        const shown = time(until, TimestampStyles.LongDateShortTime);
+        await answer(interaction, t.timedOut(userMention(target.id), shown));
+        const entry = { action: "timeout", userId: target.id, reason, until } as const;
+        return logModeration(interaction, settings, entry);
     },
 };
 
@@ -88,7 +89,7 @@ export const untimeout: Command = {
         .addUserOption(targetMember)
         .addStringOption(reasonOption(false)),
 
-    async run(interaction) {
+    async run(interaction, { settings }) {
         const t = texts(interaction.locale);
         if (!interaction.inCachedGuild()) return answer(interaction, t.serverOnly);
         const target = checkedMember(interaction, "timeout", t);
@@ -98,7 +99,9 @@ export const untimeout: Command = {
         }
         const reason = interaction.options.getString(en.reasonName);
         await target.timeout(null, auditReason(interaction.member, reason));
-        return answer(interaction, t.untimedOut(userMention(target.id)));
+        await answer(interaction, t.untimedOut(userMention(target.id)));
+        const entry = { action: "untimeout", userId: target.id, reason } as const;
+        return logModeration(interaction, settings, entry);
     },
 };
 
@@ -111,14 +114,16 @@ export const kick: Command = {
         .addUserOption(targetMember)
         .addStringOption(reasonOption(false)),
 
-    async run(interaction) {
+    async run(interaction, { settings }) {
         const t = texts(interaction.locale);
         if (!interaction.inCachedGuild()) return answer(interaction, t.serverOnly);
         const target = checkedMember(interaction, "kick", t);
         if (typeof target === "string") return answer(interaction, target);
         const reason = interaction.options.getString(en.reasonName);
         await target.kick(auditReason(interaction.member, reason));
-        return answer(interaction, t.kicked(userMention(target.id)));
+        await answer(interaction, t.kicked(userMention(target.id)));
+        const entry = { action: "kick", userId: target.id, reason } as const;
+        return logModeration(interaction, settings, entry);
     },
 };
 
@@ -131,7 +136,7 @@ export const ban: Command = {
         .addUserOption(targetUser([en.moderationMemberDescription, de.moderationMemberDescription]))
         .addStringOption(reasonOption(false)),
 
-    async run(interaction) {
+    async run(interaction, { settings }) {
         const t = texts(interaction.locale);
         if (!interaction.inCachedGuild()) return answer(interaction, t.serverOnly);
         const { guild, member: moderator } = interaction;
@@ -157,7 +162,9 @@ export const ban: Command = {
             return answer(interaction, problemText(t, problem, "ban", userMention(user.id)));
         const reason = interaction.options.getString(en.reasonName);
         await guild.members.ban(user, { reason: auditReason(moderator, reason) });
-        return answer(interaction, t.banned(userMention(user.id)));
+        await answer(interaction, t.banned(userMention(user.id)));
+        const entry = { action: "ban", userId: user.id, reason } as const;
+        return logModeration(interaction, settings, entry);
     },
 };
 
@@ -170,7 +177,7 @@ export const unban: Command = {
         .addUserOption(targetUser([en.unbanUserDescription, de.unbanUserDescription]))
         .addStringOption(reasonOption(false)),
 
-    async run(interaction) {
+    async run(interaction, { settings }) {
         const t = texts(interaction.locale);
         if (!interaction.inCachedGuild()) return answer(interaction, t.serverOnly);
         const { guild } = interaction;
@@ -186,6 +193,8 @@ export const unban: Command = {
         if (!existing) return answer(interaction, t.notBanned(userMention(user.id)));
         const reason = interaction.options.getString(en.reasonName);
         await guild.bans.remove(user, auditReason(interaction.member, reason));
-        return answer(interaction, t.unbanned(userMention(user.id)));
+        await answer(interaction, t.unbanned(userMention(user.id)));
+        const entry = { action: "unban", userId: user.id, reason } as const;
+        return logModeration(interaction, settings, entry);
     },
 };

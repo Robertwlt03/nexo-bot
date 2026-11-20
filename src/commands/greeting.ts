@@ -6,7 +6,8 @@ import {
     PermissionFlagsBits,
     SlashCommandBuilder,
 } from "discord.js";
-import { missingPermissions, sendGreeting } from "../greeting.ts";
+import { missingPermissions } from "../channel.ts";
+import { sendGreeting } from "../greeting.ts";
 import type { GreetingKind } from "../settings.ts";
 import { en, texts } from "../texts.ts";
 import { de } from "../translations/de.ts";
@@ -26,13 +27,13 @@ export function greetingCommand(kind: GreetingKind): Command {
         .addSubcommand((setup) => {
             localized(
                 setup,
-                [en.greetingSetupName, de.greetingSetupName],
+                [en.setupName, de.setupName],
                 [en[kind].setupDescription, de[kind].setupDescription],
             )
                 .addChannelOption((channel) =>
                     channel
-                        .setName(en.greetingChannelName)
-                        .setNameLocalizations({ de: de.greetingChannelName })
+                        .setName(en.channelName)
+                        .setNameLocalizations({ de: de.channelName })
                         .setDescription(en[kind].channelDescription)
                         .setDescriptionLocalizations({ de: de[kind].channelDescription })
                         .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
@@ -68,7 +69,7 @@ export function greetingCommand(kind: GreetingKind): Command {
         .addSubcommand((off) =>
             localized(
                 off,
-                [en.greetingOffName, de.greetingOffName],
+                [en.offName, de.offName],
                 [en[kind].offDescription, de[kind].offDescription],
             ),
         );
@@ -81,17 +82,15 @@ export function greetingCommand(kind: GreetingKind): Command {
                 interaction.reply({ content, flags: MessageFlags.Ephemeral });
             if (!interaction.inCachedGuild()) return answer(t.serverOnly);
             const guildId = interaction.guildId;
-            const setupCommand = `/${kind} ${t.greetingSetupName}`;
+            const setupCommand = `/${kind} ${t.setupName}`;
 
             switch (interaction.options.getSubcommand()) {
-                case en.greetingSetupName: {
-                    const channel = interaction.options.getChannel(en.greetingChannelName, true);
+                case en.setupName: {
+                    const channel = interaction.options.getChannel(en.channelName, true);
                     const missing = missingPermissions(channel);
                     if (missing.length > 0) {
                         const names = missing.map((permission) => t.permissionNames[permission]);
-                        return answer(
-                            t.greetingCannotPost(channelMention(channel.id), names.join(", ")),
-                        );
+                        return answer(t.cannotPost(channelMention(channel.id), names.join(", ")));
                     }
                     const saved = settings.greeting(kind, guildId);
                     // What is left out keeps its saved value, or starts with the default.
@@ -116,14 +115,14 @@ export function greetingCommand(kind: GreetingKind): Command {
                     if (!saved) return answer(t.greetingNotSetUp(setupCommand));
                     const result = await sendGreeting(interaction.member, saved);
                     const channel = channelMention(saved.channelId);
-                    if (result === "no-channel") return answer(t.greetingChannelGone(setupCommand));
-                    if (result === "no-permission") {
-                        const names = Object.values(t.permissionNames).join(", ");
-                        return answer(t.greetingCannotPost(channel, names));
+                    if (result === "no-channel") return answer(t.channelGone(setupCommand));
+                    if (Array.isArray(result)) {
+                        const names = result.map((permission) => t.permissionNames[permission]);
+                        return answer(t.cannotPost(channel, names.join(", ")));
                     }
                     return answer(t.greetingTestSent(channel));
                 }
-                case en.greetingOffName:
+                case en.offName:
                     settings.removeGreeting(kind, guildId);
                     return answer(t[kind].off);
                 default:

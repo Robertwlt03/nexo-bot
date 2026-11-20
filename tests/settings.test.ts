@@ -81,10 +81,25 @@ describe("warnings", () => {
         });
         expect(settings.warnings("server", "nobody")).toEqual([]);
 
-        expect(settings.removeWarning("other", first)).toBe(false); // a number from another server
-        expect(settings.removeWarning("server", first)).toBe(true);
-        expect(settings.removeWarning("server", first)).toBe(false);
+        // a number from another server
+        expect(settings.removeWarning("other", first)).toBeUndefined();
+        expect(settings.removeWarning("server", first)).toBe("lena");
+        expect(settings.removeWarning("server", first)).toBeUndefined();
         expect(settings.warnings("server", "lena").map((w) => w.id)).toEqual([second]);
+    });
+});
+
+describe("mod log", () => {
+    it("keeps one channel per server until it is turned off", () => {
+        const settings = openSettings(":memory:");
+        expect(settings.modlogChannel("server")).toBeUndefined();
+        settings.saveModlogChannel("server", "a");
+        settings.saveModlogChannel("server", "b");
+        settings.saveModlogChannel("other", "c");
+        expect(settings.modlogChannel("server")).toBe("b");
+        settings.removeModlogChannel("server");
+        expect(settings.modlogChannel("server")).toBeUndefined();
+        expect(settings.modlogChannel("other")).toBe("c");
     });
 });
 

@@ -9,6 +9,7 @@ import {
 } from "discord.js";
 import { card } from "../card.ts";
 import { firstWithRest } from "../format.ts";
+import { logModeration } from "../modlog.ts";
 import { en, texts } from "../texts.ts";
 import { de } from "../translations/de.ts";
 import type { Command } from "./command.ts";
@@ -26,7 +27,7 @@ export const warn: Command = {
         .addUserOption(targetMember)
         .addStringOption(reasonOption(true)),
 
-    run(interaction, { settings }) {
+    async run(interaction, { settings }) {
         const t = texts(interaction.locale);
         const answer = (content: string) =>
             interaction.reply({ content, flags: MessageFlags.Ephemeral });
@@ -35,9 +36,16 @@ export const warn: Command = {
         if (typeof target === "string") return answer(target);
 
         const reason = interaction.options.getString(en.reasonName, true);
-        settings.addWarning(interaction.guildId, target.id, interaction.user.id, reason);
+        const warning = settings.addWarning(
+            interaction.guildId,
+            target.id,
+            interaction.user.id,
+            reason,
+        );
         const count = settings.warnings(interaction.guildId, target.id).length;
-        return answer(t.warned(userMention(target.id), count));
+        await answer(t.warned(userMention(target.id), count));
+        const entry = { action: "warn", userId: target.id, reason, warning } as const;
+        return logModeration(interaction, settings, entry);
     },
 };
 
@@ -96,14 +104,16 @@ export const unwarn: Command = {
                 .setRequired(true),
         ),
 
-    run(interaction, { settings }) {
+    async run(interaction, { settings }) {
         const t = texts(interaction.locale);
         const answer = (content: string) =>
             interaction.reply({ content, flags: MessageFlags.Ephemeral });
         if (!interaction.inCachedGuild()) return answer(t.serverOnly);
         const id = interaction.options.getInteger(en.numberName, true);
-        return answer(
-            settings.removeWarning(interaction.guildId, id) ? t.unwarned(id) : t.unwarnNotFound(id),
-        );
+        const userId = settings.removeWarning(interaction.guildId, id);
+        if (!userId) return answer(t.unwarnNotFound(id));
+        await answer(t.unwarned(id));
+        const entry = { action: "unwarn", userId, reason: null, warning: id } as const;
+        return logModeration(interaction, settings, entry);
     },
 };
