@@ -7,39 +7,29 @@ import {
     SlashCommandBuilder,
 } from "discord.js";
 import { missingPermissions } from "../channel.ts";
-import { en, texts } from "../texts.ts";
-import { de } from "../translations/de.ts";
+import { commandTexts, en, texts } from "../texts.ts";
 import type { Command } from "./command.ts";
-import { localized } from "./localized.ts";
 
 export const modlog: Command = {
     data: new SlashCommandBuilder()
         .setName("modlog")
-        .setDescription(en.modlogDescription)
-        .setDescriptionLocalizations({ de: de.modlogDescription })
+        .setDescription(en.commandDescriptions.modlog)
         .setContexts(InteractionContextType.Guild)
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
         .addSubcommand((setup) =>
-            localized(
-                setup,
-                [en.setupName, de.setupName],
-                [en.modlogSetupDescription, de.modlogSetupDescription],
-            ).addChannelOption((channel) =>
-                channel
-                    .setName(en.channelName)
-                    .setNameLocalizations({ de: de.channelName })
-                    .setDescription(en.modlogChannelDescription)
-                    .setDescriptionLocalizations({ de: de.modlogChannelDescription })
-                    .addChannelTypes(ChannelType.GuildText)
-                    .setRequired(true),
-            ),
+            setup
+                .setName(commandTexts.setupName)
+                .setDescription(commandTexts.modlogSetupDescription)
+                .addChannelOption((channel) =>
+                    channel
+                        .setName(commandTexts.channelName)
+                        .setDescription(commandTexts.modlogChannelDescription)
+                        .addChannelTypes(ChannelType.GuildText)
+                        .setRequired(true),
+                ),
         )
         .addSubcommand((off) =>
-            localized(
-                off,
-                [en.offName, de.offName],
-                [en.modlogOffDescription, de.modlogOffDescription],
-            ),
+            off.setName(commandTexts.offName).setDescription(commandTexts.modlogOffDescription),
         ),
 
     run(interaction, { settings }) {
@@ -48,11 +38,11 @@ export const modlog: Command = {
             interaction.reply({ content, flags: MessageFlags.Ephemeral });
         if (!interaction.inCachedGuild()) return answer(t.serverOnly);
 
-        if (interaction.options.getSubcommand() === en.offName) {
+        if (interaction.options.getSubcommand() === commandTexts.offName) {
             settings.removeModlog(interaction.guildId);
             return answer(t.modlogOff);
         }
-        const channel = interaction.options.getChannel(en.channelName, true);
+        const channel = interaction.options.getChannel(commandTexts.channelName, true);
         const missing = missingPermissions(channel);
         if (missing.length > 0) {
             const names = missing.map((permission) => t.permissionNames[permission]).join(", ");

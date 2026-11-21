@@ -2,14 +2,10 @@ import { SlashCommandBuilder } from "discord.js";
 import { CARD, card, facts } from "../card.ts";
 import { icon } from "../icons.ts";
 import { en, texts } from "../texts.ts";
-import { de } from "../translations/de.ts";
 import type { Command } from "./command.ts";
 
 export const ping: Command = {
-    data: new SlashCommandBuilder()
-        .setName("ping")
-        .setDescription(en.pingDescription)
-        .setDescriptionLocalizations({ de: de.pingDescription }),
+    data: new SlashCommandBuilder().setName("ping").setDescription(en.commandDescriptions.ping),
 
     async run(interaction) {
         const t = texts(interaction.locale);

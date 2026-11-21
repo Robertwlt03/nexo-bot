@@ -10,7 +10,6 @@ import { icon } from "../icons.ts";
 import { avatarData, rankImage } from "../images.ts";
 import { levelFor } from "../leveling.ts";
 import { en, texts } from "../texts.ts";
-import { de } from "../translations/de.ts";
 import type { Command } from "./command.ts";
 import { chosenPerson, memberOption } from "./member-option.ts";
 
@@ -19,8 +18,7 @@ const LEADERBOARD_SIZE = 10;
 export const rank: Command = {
     data: new SlashCommandBuilder()
         .setName("rank")
-        .setDescription(en.rankDescription)
-        .setDescriptionLocalizations({ de: de.rankDescription })
+        .setDescription(en.commandDescriptions.rank)
         .setContexts(InteractionContextType.Guild)
         .addUserOption(memberOption),
 
@@ -57,8 +55,7 @@ export const rank: Command = {
 export const leaderboard: Command = {
     data: new SlashCommandBuilder()
         .setName("leaderboard")
-        .setDescription(en.leaderboardDescription)
-        .setDescriptionLocalizations({ de: de.leaderboardDescription })
+        .setDescription(en.commandDescriptions.leaderboard)
         .setContexts(InteractionContextType.Guild),
 
     run(interaction, { settings }) {

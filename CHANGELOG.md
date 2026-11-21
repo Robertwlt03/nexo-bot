@@ -9,7 +9,7 @@ All notable changes to this project are listed here. The format follows
 ### Added
 
 - The bot itself, rebuilt from scratch on Node.js 26 and discord.js 14, with its first slash
-  commands: `/ping`, `/info` and `/help`, in German and English.
+  commands: `/ping`, `/info` and `/help`, which answer in German or English.
 - `/serverinfo`, `/userinfo` and `/avatar`: the server, a member and a member's profile picture.
 - `/welcome`: a welcome card for new members in a channel, with the placeholders `{user}`,
   `{username}`, `{server}` and `{membercount}`. Needs the Server Members Intent.
@@ -36,6 +36,8 @@ All notable changes to this project are listed here. The format follows
 
 ### Changed
 
+- Commands, their options and descriptions are English for everyone, so the command list no
+  longer mixes languages. Answers, cards and `/help` stay in each member's language.
 - Every card uses Discord's newer components (Components V2) instead of embeds: a heading, the
   facts, then small print, and nothing twice. The welcome mentions the new member once, inside
   the card, which notifies them when `ping` is on. `/welcome setup` answers with a test button,

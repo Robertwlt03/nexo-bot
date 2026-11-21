@@ -11,28 +11,20 @@ import {
     type ModerationProblem,
     moderationProblem,
 } from "../moderation.ts";
-import { en, type Texts } from "../texts.ts";
-import { de } from "../translations/de.ts";
+import { commandTexts, type Texts } from "../texts.ts";
 
 /** The member a moderation command acts on. */
 export function targetMember(option: SlashCommandUserOption): SlashCommandUserOption {
     return option
-        .setName(en.moderationMemberName)
-        .setNameLocalizations({ de: de.moderationMemberName })
-        .setDescription(en.moderationMemberDescription)
-        .setDescriptionLocalizations({ de: de.moderationMemberDescription })
+        .setName(commandTexts.moderationMemberName)
+        .setDescription(commandTexts.moderationMemberDescription)
         .setRequired(true);
 }
 
 /** A user who may not be on the server (anymore), for /ban and /unban. */
-export function targetUser(description: [string, string]) {
+export function targetUser(description: string) {
     return (option: SlashCommandUserOption): SlashCommandUserOption =>
-        option
-            .setName(en.userName)
-            .setNameLocalizations({ de: de.userName })
-            .setDescription(description[0])
-            .setDescriptionLocalizations({ de: description[1] })
-            .setRequired(true);
+        option.setName(commandTexts.userName).setDescription(description).setRequired(true);
 }
 
 /** The member to act on, or the refusal to show instead; all checks run before Discord is asked. */
@@ -41,8 +33,8 @@ export function checkedMember(
     action: ModerationAction,
     t: Texts,
 ): GuildMember | string {
-    const user = interaction.options.getUser(en.moderationMemberName, true);
-    const target = interaction.options.getMember(en.moderationMemberName);
+    const user = interaction.options.getUser(commandTexts.moderationMemberName, true);
+    const target = interaction.options.getMember(commandTexts.moderationMemberName);
     if (!target) return t.notMember(userMention(user.id));
     const problem = moderationProblem(action, factsFor(action, target, interaction.member));
     return problem ? problemText(t, problem, action, userMention(target.id)) : target;
@@ -52,10 +44,8 @@ export function checkedMember(
 export function reasonOption(required: boolean) {
     return (option: SlashCommandStringOption): SlashCommandStringOption =>
         option
-            .setName(en.reasonName)
-            .setNameLocalizations({ de: de.reasonName })
-            .setDescription(en.reasonDescription)
-            .setDescriptionLocalizations({ de: de.reasonDescription })
+            .setName(commandTexts.reasonName)
+            .setDescription(commandTexts.reasonDescription)
             .setMaxLength(400)
             .setRequired(required);
 }

@@ -13,10 +13,8 @@ import {
 import { missingPermissions } from "../channel.ts";
 import { sendGreeting } from "../greeting.ts";
 import type { GreetingKind, Settings } from "../settings.ts";
-import { en, type Texts, texts } from "../texts.ts";
-import { de } from "../translations/de.ts";
+import { commandTexts, en, type Texts, texts } from "../texts.ts";
 import type { Command } from "./command.ts";
-import { localized } from "./localized.ts";
 import { commandMention } from "./mention.ts";
 
 /** Sends a greeting for the member who asks, to try it, and says how that went. */
@@ -26,7 +24,7 @@ async function tryGreeting(
     settings: Settings,
     t: Texts,
 ): Promise<string> {
-    const setup = commandMention(kind, en.setupName);
+    const setup = commandMention(kind, commandTexts.setupName);
     const saved = settings.greeting(kind, member.guild.id);
     if (!saved) return t.greetingNotSetUp(setup);
     const result = await sendGreeting(kind, member, saved);
@@ -43,60 +41,45 @@ async function tryGreeting(
 export function greetingCommand(kind: GreetingKind): Command {
     const data = new SlashCommandBuilder()
         .setName(kind)
-        .setDescription(en[kind].description)
-        .setDescriptionLocalizations({ de: de[kind].description })
+        .setDescription(en.commandDescriptions[kind])
         .setContexts(InteractionContextType.Guild)
         // Only people who may manage the server see it;
         // admins can widen this in the server settings.
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
         .addSubcommand((setup) => {
-            localized(
-                setup,
-                [en.setupName, de.setupName],
-                [en[kind].setupDescription, de[kind].setupDescription],
-            )
+            setup
+                .setName(commandTexts.setupName)
+                .setDescription(commandTexts[kind].setupDescription)
                 .addChannelOption((channel) =>
                     channel
-                        .setName(en.channelName)
-                        .setNameLocalizations({ de: de.channelName })
-                        .setDescription(en[kind].channelDescription)
-                        .setDescriptionLocalizations({ de: de[kind].channelDescription })
+                        .setName(commandTexts.channelName)
+                        .setDescription(commandTexts[kind].channelDescription)
                         .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
                         .setRequired(true),
                 )
                 .addStringOption((message) =>
                     message
-                        .setName(en.greetingMessageName)
-                        .setNameLocalizations({ de: de.greetingMessageName })
-                        .setDescription(en.greetingMessageDescription)
-                        .setDescriptionLocalizations({ de: de.greetingMessageDescription })
+                        .setName(commandTexts.greetingMessageName)
+                        .setDescription(commandTexts.greetingMessageDescription)
                         .setMaxLength(1000),
                 );
             // Someone who has left gets no notification, so only the welcome can mention.
             if (kind === "welcome") {
                 setup.addBooleanOption((ping) =>
                     ping
-                        .setName(en.greetingPingName)
-                        .setNameLocalizations({ de: de.greetingPingName })
-                        .setDescription(en.greetingPingDescription)
-                        .setDescriptionLocalizations({ de: de.greetingPingDescription }),
+                        .setName(commandTexts.greetingPingName)
+                        .setDescription(commandTexts.greetingPingDescription),
                 );
             }
             return setup;
         })
         .addSubcommand((test) =>
-            localized(
-                test,
-                [en.greetingTestName, de.greetingTestName],
-                [en[kind].testDescription, de[kind].testDescription],
-            ),
+            test
+                .setName(commandTexts.greetingTestName)
+                .setDescription(commandTexts[kind].testDescription),
         )
         .addSubcommand((off) =>
-            localized(
-                off,
-                [en.offName, de.offName],
-                [en[kind].offDescription, de[kind].offDescription],
-            ),
+            off.setName(commandTexts.offName).setDescription(commandTexts[kind].offDescription),
         );
 
     return {
@@ -109,8 +92,8 @@ export function greetingCommand(kind: GreetingKind): Command {
             const guildId = interaction.guildId;
 
             switch (interaction.options.getSubcommand()) {
-                case en.setupName: {
-                    const channel = interaction.options.getChannel(en.channelName, true);
+                case commandTexts.setupName: {
+                    const channel = interaction.options.getChannel(commandTexts.channelName, true);
                     const missing = missingPermissions(channel);
                     if (missing.length > 0) {
                         const names = missing.map((permission) => t.permissionNames[permission]);
@@ -121,11 +104,11 @@ export function greetingCommand(kind: GreetingKind): Command {
                     settings.saveGreeting(kind, guildId, {
                         channelId: channel.id,
                         message:
-                            interaction.options.getString(en.greetingMessageName) ??
+                            interaction.options.getString(commandTexts.greetingMessageName) ??
                             saved?.message ??
                             t[kind].defaultMessage,
                         ping:
-                            interaction.options.getBoolean(en.greetingPingName) ??
+                            interaction.options.getBoolean(commandTexts.greetingPingName) ??
                             saved?.ping ??
                             false,
                     });
@@ -139,9 +122,9 @@ export function greetingCommand(kind: GreetingKind): Command {
                         flags: MessageFlags.Ephemeral,
                     });
                 }
-                case en.greetingTestName:
+                case commandTexts.greetingTestName:
                     return answer(await tryGreeting(kind, interaction.member, settings, t));
-                case en.offName:
+                case commandTexts.offName:
                     settings.removeGreeting(kind, guildId);
                     return answer(t[kind].off);
                 default:

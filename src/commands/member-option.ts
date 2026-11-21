@@ -4,18 +4,13 @@ import type {
     SlashCommandUserOption,
     User,
 } from "discord.js";
-import { en } from "../texts.ts";
-import { de } from "../translations/de.ts";
+import { commandTexts } from "../texts.ts";
 
-const NAME = "member";
+const NAME = commandTexts.memberOptionName;
 
 /** The optional "member" option of /userinfo and /avatar; left out, it means whoever asks. */
 export function memberOption(option: SlashCommandUserOption): SlashCommandUserOption {
-    return option
-        .setName(NAME)
-        .setNameLocalizations({ de: de.memberOptionName })
-        .setDescription(en.memberOptionDescription)
-        .setDescriptionLocalizations({ de: de.memberOptionDescription });
+    return option.setName(NAME).setDescription(commandTexts.memberOptionDescription);
 }
 
 /** The chosen person; `member` is null when they are not on this server (anymore). */

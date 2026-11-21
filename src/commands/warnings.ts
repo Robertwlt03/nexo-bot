@@ -17,8 +17,7 @@ import { card, PRIVATE_CARD } from "../card.ts";
 import { icon } from "../icons.ts";
 import { logModeration } from "../modlog.ts";
 import type { Settings } from "../settings.ts";
-import { en, type Texts, texts } from "../texts.ts";
-import { de } from "../translations/de.ts";
+import { commandTexts, en, type Texts, texts } from "../texts.ts";
 import type { Command } from "./command.ts";
 import { checkedMember, reasonOption, targetMember } from "./moderation-options.ts";
 
@@ -58,8 +57,7 @@ function warningsCard(t: Texts, settings: Settings, guildId: string, user: User)
 export const warn: Command = {
     data: new SlashCommandBuilder()
         .setName("warn")
-        .setDescription(en.warnDescription)
-        .setDescriptionLocalizations({ de: de.warnDescription })
+        .setDescription(en.commandDescriptions.warn)
         .setContexts(InteractionContextType.Guild)
         .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
         .addUserOption(targetMember)
@@ -73,7 +71,7 @@ export const warn: Command = {
         const target = checkedMember(interaction, "warn", t);
         if (typeof target === "string") return answer(target);
 
-        const reason = interaction.options.getString(en.reasonName, true);
+        const reason = interaction.options.getString(commandTexts.reasonName, true);
         const warning = settings.addWarning(
             interaction.guildId,
             target.id,
@@ -90,8 +88,7 @@ export const warn: Command = {
 export const warnings: Command = {
     data: new SlashCommandBuilder()
         .setName("warnings")
-        .setDescription(en.warningsDescription)
-        .setDescriptionLocalizations({ de: de.warningsDescription })
+        .setDescription(en.commandDescriptions.warnings)
         .setContexts(InteractionContextType.Guild)
         .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
         .addUserOption(targetMember),
@@ -101,7 +98,7 @@ export const warnings: Command = {
         if (!interaction.inCachedGuild()) {
             return interaction.reply({ content: t.serverOnly, flags: MessageFlags.Ephemeral });
         }
-        const user = interaction.options.getUser(en.moderationMemberName, true);
+        const user = interaction.options.getUser(commandTexts.moderationMemberName, true);
         if (settings.warnings(interaction.guildId, user.id).length === 0) {
             return interaction.reply({
                 content: t.warningsNone(userMention(user.id)),
@@ -141,16 +138,13 @@ export const warnings: Command = {
 export const unwarn: Command = {
     data: new SlashCommandBuilder()
         .setName("unwarn")
-        .setDescription(en.unwarnDescription)
-        .setDescriptionLocalizations({ de: de.unwarnDescription })
+        .setDescription(en.commandDescriptions.unwarn)
         .setContexts(InteractionContextType.Guild)
         .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
         .addIntegerOption((number) =>
             number
-                .setName(en.numberName)
-                .setNameLocalizations({ de: de.numberName })
-                .setDescription(en.numberDescription)
-                .setDescriptionLocalizations({ de: de.numberDescription })
+                .setName(commandTexts.numberName)
+                .setDescription(commandTexts.numberDescription)
                 .setMinValue(1)
                 .setRequired(true),
         ),
@@ -160,7 +154,7 @@ export const unwarn: Command = {
         const answer = (content: string) =>
             interaction.reply({ content, flags: MessageFlags.Ephemeral });
         if (!interaction.inCachedGuild()) return answer(t.serverOnly);
-        const id = interaction.options.getInteger(en.numberName, true);
+        const id = interaction.options.getInteger(commandTexts.numberName, true);
         const userId = settings.removeWarning(interaction.guildId, id);
         if (!userId) return answer(t.unwarnNotFound(id));
         await answer(t.unwarned(id));

@@ -8,14 +8,12 @@ import {
 import { CARD, card, facts } from "../card.ts";
 import { dateWithAge } from "../format.ts";
 import { en, texts } from "../texts.ts";
-import { de } from "../translations/de.ts";
 import type { Command } from "./command.ts";
 
 export const serverinfo: Command = {
     data: new SlashCommandBuilder()
         .setName("serverinfo")
-        .setDescription(en.serverinfoDescription)
-        .setDescriptionLocalizations({ de: de.serverinfoDescription })
+        .setDescription(en.commandDescriptions.serverinfo)
         .setContexts(InteractionContextType.Guild),
 
     async run(interaction) {

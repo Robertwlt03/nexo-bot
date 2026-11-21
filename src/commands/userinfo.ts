@@ -8,7 +8,6 @@ import {
 import { CARD, card, facts } from "../card.ts";
 import { dateWithAge, firstWithRest } from "../format.ts";
 import { en, texts } from "../texts.ts";
-import { de } from "../translations/de.ts";
 import type { Command } from "./command.ts";
 import { chosenPerson, memberOption } from "./member-option.ts";
 
@@ -17,8 +16,7 @@ const ROLES_SHOWN = 15; // a card holds 4000 characters; fifteen role mentions s
 export const userinfo: Command = {
     data: new SlashCommandBuilder()
         .setName("userinfo")
-        .setDescription(en.userinfoDescription)
-        .setDescriptionLocalizations({ de: de.userinfoDescription })
+        .setDescription(en.commandDescriptions.userinfo)
         .setContexts(InteractionContextType.Guild)
         .addUserOption(memberOption),
 

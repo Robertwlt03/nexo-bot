@@ -2,7 +2,6 @@ import { ApplicationCommandOptionType, SlashCommandBuilder, subtext } from "disc
 import { CARD, card } from "../card.ts";
 import { icon } from "../icons.ts";
 import { en, type Texts, texts } from "../texts.ts";
-import { de } from "../translations/de.ts";
 import type { Command } from "./command.ts";
 import { commandMention } from "./mention.ts";
 
@@ -20,17 +19,15 @@ const SECTIONS: Record<keyof Texts["helpSections"], readonly string[]> = {
  */
 export function help(commands: readonly Command[]): Command {
     return {
-        data: new SlashCommandBuilder()
-            .setName("help")
-            .setDescription(en.helpDescription)
-            .setDescriptionLocalizations({ de: de.helpDescription }),
+        data: new SlashCommandBuilder().setName("help").setDescription(en.commandDescriptions.help),
 
         run(interaction) {
             const t = texts(interaction.locale);
             const line = ({ data }: Command) => {
-                const { name, description, description_localizations, options } = data.toJSON();
-                // Discord keys a command's translations by language, like interaction.locale.
-                const shown = description_localizations?.[interaction.locale] ?? description;
+                const { name, options } = data.toJSON();
+                // Discord shows commands in English; /help says what they do in the asker's
+                // language.
+                const said = t.commandDescriptions[name as keyof Texts["commandDescriptions"]];
                 // Discord makes only a whole command clickable, so one with subcommands is
                 // listed as each of them.
                 const subcommands = (options ?? []).filter(
@@ -39,7 +36,7 @@ export function help(commands: readonly Command[]): Command {
                 const mentions = subcommands.length
                     ? subcommands.map((subcommand) => commandMention(name, subcommand.name))
                     : [commandMention(name)];
-                return `${mentions.join(" ")} ${shown}`;
+                return `${mentions.join(" ")} ${said}`;
             };
             // ponytail: one card holds 4000 characters, about 40 commands at today's length;
             // split it into several cards beyond that.

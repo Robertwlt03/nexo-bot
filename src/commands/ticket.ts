@@ -21,10 +21,8 @@ import { CARD, card, facts } from "../card.ts";
 import { type ChannelPermission, missingPermissions, TICKET_PERMISSIONS } from "../channel.ts";
 import { icon } from "../icons.ts";
 import type { Settings } from "../settings.ts";
-import { en, type Texts, texts } from "../texts.ts";
-import { de } from "../translations/de.ts";
+import { commandTexts, en, type Texts, texts } from "../texts.ts";
 import type { Command } from "./command.ts";
-import { localized } from "./localized.ts";
 
 /** The first message of a ticket: whom it is for, who answers, and the button that closes it. */
 export function ticketCard(t: Texts, userId: string, teamId?: string): ContainerBuilder {
@@ -121,39 +119,30 @@ async function createTicket(
 export const ticket: Command = {
     data: new SlashCommandBuilder()
         .setName("ticket")
-        .setDescription(en.ticketDescription)
-        .setDescriptionLocalizations({ de: de.ticketDescription })
+        .setDescription(en.commandDescriptions.ticket)
         .setContexts(InteractionContextType.Guild)
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
         .addSubcommand((setup) =>
-            localized(
-                setup,
-                [en.setupName, de.setupName],
-                [en.ticketSetupDescription, de.ticketSetupDescription],
-            )
+            setup
+                .setName(commandTexts.setupName)
+                .setDescription(commandTexts.ticketSetupDescription)
                 .addChannelOption((channel) =>
                     channel
-                        .setName(en.channelName)
-                        .setNameLocalizations({ de: de.channelName })
-                        .setDescription(en.ticketChannelDescription)
-                        .setDescriptionLocalizations({ de: de.ticketChannelDescription })
+                        .setName(commandTexts.channelName)
+                        .setDescription(commandTexts.ticketChannelDescription)
                         // Only a text channel can hold private threads.
                         .addChannelTypes(ChannelType.GuildText)
                         .setRequired(true),
                 )
                 .addRoleOption((team) =>
                     team
-                        .setName(en.ticketTeamName)
-                        .setNameLocalizations({ de: de.ticketTeamName })
-                        .setDescription(en.ticketTeamDescription)
-                        .setDescriptionLocalizations({ de: de.ticketTeamDescription }),
+                        .setName(commandTexts.ticketTeamName)
+                        .setDescription(commandTexts.ticketTeamDescription),
                 )
                 .addStringOption((message) =>
                     message
-                        .setName(en.greetingMessageName)
-                        .setNameLocalizations({ de: de.greetingMessageName })
-                        .setDescription(en.ticketMessageDescription)
-                        .setDescriptionLocalizations({ de: de.ticketMessageDescription })
+                        .setName(commandTexts.greetingMessageName)
+                        .setDescription(commandTexts.ticketMessageDescription)
                         .setMaxLength(1000),
                 ),
         ),
@@ -164,10 +153,10 @@ export const ticket: Command = {
             interaction.reply({ content, flags: MessageFlags.Ephemeral });
         if (!interaction.inCachedGuild()) return answer(t.serverOnly);
 
-        const channel = interaction.options.getChannel(en.channelName, true, [
+        const channel = interaction.options.getChannel(commandTexts.channelName, true, [
             ChannelType.GuildText,
         ]);
-        const team = interaction.options.getRole(en.ticketTeamName);
+        const team = interaction.options.getRole(commandTexts.ticketTeamName);
         // Nexo mentions the team in every ticket, so only for someone who could mention it too.
         if (
             team &&
@@ -186,7 +175,8 @@ export const ticket: Command = {
             const names = missing.map((permission) => t.permissionNames[permission]).join(", ");
             return answer(t.ticketCannotRun(channelMention(channel.id), names));
         }
-        const text = interaction.options.getString(en.greetingMessageName) ?? t.ticketPanelText;
+        const text =
+            interaction.options.getString(commandTexts.greetingMessageName) ?? t.ticketPanelText;
         const panel = card(`${icon("ticket")}${t.ticketPanelTitle}`, text).addActionRowComponents(
             (row) =>
                 row.addComponents(

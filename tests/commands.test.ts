@@ -13,19 +13,20 @@ import { de } from "../src/translations/de.ts";
 describe("commands", () => {
     const definitions = commands.map(({ data }) => data.toJSON());
 
-    it("have unique names and a German description beside the English one", () => {
+    it("have unique names and say what they do in every language", () => {
         expect(new Set(definitions.map(({ name }) => name)).size).toBe(definitions.length);
-        for (const { name, description, description_localizations } of definitions) {
+        for (const { name, description } of definitions) {
             expect(name).toMatch(/^[a-z]+$/);
-            expect(description).not.toBe("");
-            expect(
-                description_localizations?.de,
-                `/${name} has no German description`,
-            ).toBeTruthy();
+            expect(description).toBe(
+                en.commandDescriptions[name as keyof typeof en.commandDescriptions],
+            );
+            expect(Object.keys(de.commandDescriptions), `/${name} has no German text`).toContain(
+                name,
+            );
         }
     });
 
-    it("name and describe every option in German too", () => {
+    it("show Discord the same English names and descriptions for everyone", () => {
         // Subcommands are options too, and their own options sit inside them.
         const nested = (
             list: readonly APIApplicationCommandOption[],
@@ -36,12 +37,9 @@ describe("commands", () => {
             ]);
         const options = nested(definitions.flatMap((definition) => definition.options ?? []));
         expect(options.length).toBeGreaterThan(0);
-        for (const option of options) {
-            expect(option.name_localizations?.de, `${option.name} has no German name`).toBeTruthy();
-            expect(
-                option.description_localizations?.de,
-                `${option.name}: no German text`,
-            ).toBeTruthy();
+        for (const item of [...definitions, ...options]) {
+            expect(item.name_localizations, `${item.name} has a translated name`).toBeUndefined();
+            expect(item.description_localizations, `${item.name}: translated`).toBeUndefined();
         }
     });
 
@@ -56,10 +54,11 @@ describe("commands", () => {
         await help?.run(interaction, { settings: openSettings(":memory:") });
 
         const listing = JSON.stringify(replies[0]?.components[0]?.toJSON());
-        for (const { name, description_localizations } of definitions) {
+        for (const { name } of definitions) {
             // Before Discord gives the IDs, a command shows as code instead of a clickable mention.
             expect(listing).toContain(`/${name}`);
-            expect(listing).toContain(`\` ${description_localizations?.de}`);
+            const said = de.commandDescriptions[name as keyof typeof de.commandDescriptions];
+            expect(listing).toContain(`\` ${said}`);
         }
     });
 });

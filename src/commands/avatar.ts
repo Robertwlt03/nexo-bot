@@ -7,7 +7,6 @@ import {
 } from "discord.js";
 import { CARD, card } from "../card.ts";
 import { en, texts } from "../texts.ts";
-import { de } from "../translations/de.ts";
 import type { Command } from "./command.ts";
 import { chosenPerson, memberOption } from "./member-option.ts";
 
@@ -16,8 +15,7 @@ const SIZE = 1024;
 export const avatar: Command = {
     data: new SlashCommandBuilder()
         .setName("avatar")
-        .setDescription(en.avatarDescription)
-        .setDescriptionLocalizations({ de: de.avatarDescription })
+        .setDescription(en.commandDescriptions.avatar)
         .setContexts(InteractionContextType.Guild)
         .addUserOption(memberOption),
 

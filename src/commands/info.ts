@@ -8,14 +8,10 @@ import {
 import packageJson from "../../package.json" with { type: "json" };
 import { CARD, card, facts } from "../card.ts";
 import { en, texts } from "../texts.ts";
-import { de } from "../translations/de.ts";
 import type { Command } from "./command.ts";
 
 export const info: Command = {
-    data: new SlashCommandBuilder()
-        .setName("info")
-        .setDescription(en.infoDescription)
-        .setDescriptionLocalizations({ de: de.infoDescription }),
+    data: new SlashCommandBuilder().setName("info").setDescription(en.commandDescriptions.info),
 
     run(interaction) {
         const { client } = interaction;

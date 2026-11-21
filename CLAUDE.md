@@ -18,7 +18,9 @@
 
 - English everywhere in code and docs. What members see is in `src/texts.ts` (English) and
   `src/translations/de.ts` (German); a command shows them through `texts(interaction.locale)`.
-- Every command has an English description and a German one (`setDescriptionLocalizations`).
+- Commands are English for everyone: names, subcommands, options, their descriptions and choices
+  come from `commandTexts`, with no translations, so nobody sees a mix of languages. What Nexo
+  answers follows each member's language, `/help`'s descriptions too (`commandDescriptions`).
 - One small step at a time: each command is tried on Robert's test server before the next one.
 - No privileged intents unless a feature needs one, and then say which and why. Today: Server
   Members (`GuildMembers`), for welcome, goodbye and automatic roles; it is turned on in the

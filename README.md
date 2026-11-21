@@ -72,7 +72,8 @@ is in, which can take Discord a moment.
 - `src/commands/index.ts` lists every command. When the bot starts, it registers that list with
   Discord and answers each slash command with the matching one.
 - `src/texts.ts` holds every text in English; `src/translations/de.ts` holds the German ones.
-  Each answer picks the language of the member's Discord.
+  Each answer picks the language of the member's Discord. The commands themselves are English
+  for everyone (`commandTexts`), so the command list never mixes languages.
 - The bot asks Discord for the server list (`Guilds`) and, for welcome, goodbye and automatic
   roles, for members joining and leaving (`GuildMembers`, the privileged _Server Members Intent_).
   For the mod log it gets new audit log entries (`GuildModeration`), so kicks, bans and timeouts

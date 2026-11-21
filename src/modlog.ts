@@ -15,7 +15,7 @@ import { post } from "./channel.ts";
 import { commandMention } from "./commands/mention.ts";
 import { type IconName, icon } from "./icons.ts";
 import type { Settings } from "./settings.ts";
-import { en, type Texts, texts } from "./texts.ts";
+import { commandTexts, type Texts, texts } from "./texts.ts";
 
 /** Something a moderator did, through Nexo or in Discord itself. */
 export type ModlogAction = keyof Texts["modlogTitles"];
@@ -83,7 +83,7 @@ export async function logModeration(
         result === "failed"
             ? t.error
             : result === "no-channel"
-              ? t.channelGone(commandMention("modlog", en.setupName))
+              ? t.channelGone(commandMention("modlog", commandTexts.setupName))
               : t.cannotPost(
                     channelMention(channelId),
                     result.map((permission) => t.permissionNames[permission]).join(", "),

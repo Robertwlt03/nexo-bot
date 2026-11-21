@@ -9,20 +9,16 @@ import {
 import { autoroleProblem } from "../autorole.ts";
 import { card, PRIVATE_CARD } from "../card.ts";
 import { icon } from "../icons.ts";
-import { en, texts } from "../texts.ts";
-import { de } from "../translations/de.ts";
+import { commandTexts, en, texts } from "../texts.ts";
 import type { Command } from "./command.ts";
-import { localized } from "./localized.ts";
 import { commandMention } from "./mention.ts";
 
 /** The role option of /autorole add and remove. */
 function withRole(subcommand: SlashCommandSubcommandBuilder): SlashCommandSubcommandBuilder {
     return subcommand.addRoleOption((role) =>
         role
-            .setName(en.roleOptionName)
-            .setNameLocalizations({ de: de.roleOptionName })
-            .setDescription(en.roleOptionDescription)
-            .setDescriptionLocalizations({ de: de.roleOptionDescription })
+            .setName(commandTexts.roleOptionName)
+            .setDescription(commandTexts.roleOptionDescription)
             .setRequired(true),
     );
 }
@@ -30,34 +26,27 @@ function withRole(subcommand: SlashCommandSubcommandBuilder): SlashCommandSubcom
 export const autorole: Command = {
     data: new SlashCommandBuilder()
         .setName("autorole")
-        .setDescription(en.autoroleDescription)
-        .setDescriptionLocalizations({ de: de.autoroleDescription })
+        .setDescription(en.commandDescriptions.autorole)
         .setContexts(InteractionContextType.Guild)
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles)
         .addSubcommand((add) =>
             withRole(
-                localized(
-                    add,
-                    [en.autoroleAddName, de.autoroleAddName],
-                    [en.autoroleAddDescription, de.autoroleAddDescription],
-                ),
+                add
+                    .setName(commandTexts.autoroleAddName)
+                    .setDescription(commandTexts.autoroleAddDescription),
             ),
         )
         .addSubcommand((remove) =>
             withRole(
-                localized(
-                    remove,
-                    [en.autoroleRemoveName, de.autoroleRemoveName],
-                    [en.autoroleRemoveDescription, de.autoroleRemoveDescription],
-                ),
+                remove
+                    .setName(commandTexts.autoroleRemoveName)
+                    .setDescription(commandTexts.autoroleRemoveDescription),
             ),
         )
         .addSubcommand((list) =>
-            localized(
-                list,
-                [en.autoroleListName, de.autoroleListName],
-                [en.autoroleListDescription, de.autoroleListDescription],
-            ),
+            list
+                .setName(commandTexts.autoroleListName)
+                .setDescription(commandTexts.autoroleListDescription),
         ),
 
     run(interaction, { settings }) {
@@ -68,8 +57,8 @@ export const autorole: Command = {
         const { guild, guildId } = interaction;
 
         switch (interaction.options.getSubcommand()) {
-            case en.autoroleAddName: {
-                const role = interaction.options.getRole(en.roleOptionName, true);
+            case commandTexts.autoroleAddName: {
+                const role = interaction.options.getRole(commandTexts.roleOptionName, true);
                 const mention = roleMention(role.id);
                 const asker = interaction.member;
                 switch (
@@ -99,8 +88,8 @@ export const autorole: Command = {
                         : t.autoroleAlready(mention),
                 );
             }
-            case en.autoroleRemoveName: {
-                const role = interaction.options.getRole(en.roleOptionName, true);
+            case commandTexts.autoroleRemoveName: {
+                const role = interaction.options.getRole(commandTexts.roleOptionName, true);
                 const mention = roleMention(role.id);
                 return answer(
                     settings.removeAutorole(guildId, role.id)
@@ -108,7 +97,7 @@ export const autorole: Command = {
                         : t.autoroleNotThere(mention),
                 );
             }
-            case en.autoroleListName: {
+            case commandTexts.autoroleListName: {
                 // A role deleted from the server can't be picked for remove; the list drops it.
                 const ids = settings.autoroles(guildId).filter((id) => {
                     if (guild.roles.cache.has(id)) return true;
@@ -116,7 +105,9 @@ export const autorole: Command = {
                     return false;
                 });
                 if (ids.length === 0) {
-                    return answer(t.autoroleNone(commandMention("autorole", en.autoroleAddName)));
+                    return answer(
+                        t.autoroleNone(commandMention("autorole", commandTexts.autoroleAddName)),
+                    );
                 }
                 const list = ids.map(roleMention).join("\n");
                 return interaction.reply({
