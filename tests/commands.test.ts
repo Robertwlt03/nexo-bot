@@ -3,6 +3,8 @@ import {
     type ChatInputCommandInteraction,
     type ContainerBuilder,
     Locale,
+    MessageFlags,
+    PermissionsBitField,
 } from "discord.js";
 import { describe, expect, it } from "vitest";
 import { commands } from "../src/commands/index.ts";
@@ -43,23 +45,36 @@ describe("commands", () => {
         }
     });
 
-    it("are all listed by /help, in the asker's language", async () => {
+    /** /help's private answer for someone with the given permissions, as JSON. */
+    async function helpFor(permissions: PermissionsBitField) {
         const help = commands.find(({ data }) => data.name === "help");
-        const replies: { components: ContainerBuilder[] }[] = [];
+        const replies: { components: ContainerBuilder[]; flags: number }[] = [];
         const interaction = {
             locale: Locale.German,
-            reply: async (answer: { components: ContainerBuilder[] }) => replies.push(answer),
+            memberPermissions: permissions,
+            reply: async (answer: (typeof replies)[number]) => replies.push(answer),
         } as unknown as ChatInputCommandInteraction;
-
         await help?.run(interaction, { settings: openSettings(":memory:") });
+        const [answer] = replies;
+        return { listing: JSON.stringify(answer?.components[0]?.toJSON()), flags: answer?.flags };
+    }
 
-        const listing = JSON.stringify(replies[0]?.components[0]?.toJSON());
+    it("are all listed by /help for an admin, in the asker's language", async () => {
+        const { listing } = await helpFor(new PermissionsBitField(PermissionsBitField.All));
         for (const { name } of definitions) {
             // Before Discord gives the IDs, a command shows as code instead of a clickable mention.
             expect(listing).toContain(`/${name}`);
             const said = de.commandDescriptions[name as keyof typeof de.commandDescriptions];
             expect(listing).toContain(`\` ${said}`);
         }
+    });
+
+    it("are listed for a member only as far as they may use them, privately", async () => {
+        const { listing, flags } = await helpFor(new PermissionsBitField());
+        expect(listing).toContain("/rank");
+        expect(listing).not.toContain("/warn");
+        expect(listing).not.toContain("/ticket");
+        expect(Number(flags) & MessageFlags.Ephemeral).toBeTruthy();
     });
 });
 

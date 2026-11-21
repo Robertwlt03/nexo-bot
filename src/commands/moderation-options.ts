@@ -1,16 +1,25 @@
 import {
     type ChatInputCommandInteraction,
+    escapeMarkdown,
+    type Guild,
     type GuildMember,
     type SlashCommandStringOption,
     type SlashCommandUserOption,
+    subtext,
+    TimestampStyles,
+    time,
+    type User,
     userMention,
 } from "discord.js";
+import { CARD, card, facts } from "../card.ts";
+import { icon } from "../icons.ts";
 import {
     factsFor,
     type ModerationAction,
     type ModerationProblem,
     moderationProblem,
 } from "../moderation.ts";
+import { ICONS } from "../modlog.ts";
 import { commandTexts, type Texts } from "../texts.ts";
 
 /** The member a moderation command acts on. */
@@ -84,4 +93,51 @@ export function problemText(
         case "above-nexo":
             return t.problemAboveNexo(member);
     }
+}
+
+/** What a member is told about a moderator's action: where, why, until when, how many warnings. */
+export type MemberNotice = {
+    action: ModerationAction;
+    guild: Guild;
+    reason: string | null;
+    until?: Date;
+    warnings?: number;
+};
+
+/**
+ * The private card a member gets: calm, without the moderator's name, which protects them, and
+ * saying that replies reach nobody.
+ */
+export function noticeCard(t: Texts, notice: MemberNotice) {
+    const { action, guild, reason, until, warnings } = notice;
+    const text = [
+        facts([
+            [t.modlogReason, reason ?? undefined],
+            [t.modlogUntil, until && time(until, TimestampStyles.LongDateShortTime)],
+            [t.dmWarnings, warnings === undefined ? undefined : String(warnings)],
+        ]),
+        ...(action === "kick" ? [subtext(t.dmKickNote)] : []),
+        subtext(t.dmNoReply),
+    ]
+        .filter(Boolean)
+        .join("\n");
+    const title = `${icon(ICONS[action])}${t.dmTitles[action](escapeMarkdown(guild.name))}`;
+    return card(title, text, { picture: guild.iconURL({ size: 256 }) ?? undefined });
+}
+
+/**
+ * Tells the member privately what a moderator did, in the moderator's language: Nexo doesn't know
+ * the member's. False when it didn't arrive (direct messages closed, Nexo blocked, no shared
+ * server); that never stops the action.
+ */
+export function tellMember(user: User, t: Texts, notice: MemberNotice): Promise<boolean> {
+    return user.send({ components: [noticeCard(t, notice)], flags: CARD }).then(
+        () => true,
+        () => false,
+    );
+}
+
+/** The line the moderator's answer gets when the member could not be told. */
+export function untold(t: Texts, told: boolean): string {
+    return told ? "" : `\n${subtext(t.dmNotDelivered)}`;
 }

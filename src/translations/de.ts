@@ -4,33 +4,33 @@ export const de: Texts = {
     error: "Da ist etwas schiefgelaufen. Versuch es gleich noch einmal.",
     unknownCommand: "Diesen Befehl hat Nexo nicht (mehr).",
     commandDescriptions: {
-        ping: "Zeigt, wie schnell Nexo antwortet",
         info: "Zeigt, was Nexo ist und wie es ihm geht",
-        help: "Zeigt alles, was Nexo kann",
+        help: "Zeigt die Befehle, die du benutzen kannst",
         serverinfo: "Zeigt diesen Server: Mitglieder, Kanäle, Boosts und sein Alter",
         userinfo: "Zeigt ein Mitglied: Kontoalter, Beitritt und Rollen",
         avatar: "Zeigt das Profilbild eines Mitglieds in voller Größe",
         welcome: "Begrüßt neue Mitglieder in einem Kanal",
         goodbye: "Verabschiedet Mitglieder in einem Kanal, wenn sie gehen",
         autorole: "Gibt neuen Mitgliedern automatisch Rollen",
-        warn: "Verwarnt ein Mitglied; Nexo merkt sich die Verwarnung",
+        warn: "Verwarnt ein Mitglied per Direktnachricht; Nexo merkt sich die Verwarnung",
         warnings: "Zeigt die Verwarnungen eines Mitglieds",
-        unwarn: "Entfernt eine Verwarnung",
-        timeout: "Schaltet ein Mitglied eine Zeit lang stumm",
-        untimeout: "Hebt die Stummschaltung eines Mitglieds vorzeitig auf",
+        timeout: "Schickt ein Mitglied eine Zeit lang in den Timeout",
+        untimeout: "Beendet den Timeout eines Mitglieds vorzeitig",
         kick: "Entfernt ein Mitglied vom Server; es kann wieder beitreten",
-        ban: "Sperrt jemanden vom Server",
+        ban: "Bannt jemanden vom Server",
         unban: "Hebt einen Bann auf",
         modlog: "Protokolliert in einem Kanal, was Moderatoren über Nexo oder Discord tun",
         rank: "Zeigt Level und XP eines Mitglieds",
         leaderboard: "Zeigt, wer die meisten XP hat",
         ticket: "Lässt Mitglieder ein privates Ticket an das Team öffnen",
+        levels: "Legt fest, wo Level-ups erscheinen, oder schaltet sie aus",
+        levelrole: "Gibt Mitgliedern Rollen, wenn sie ein Level erreichen",
     },
-    roundTrip: "Antwortzeit",
-    tagline: "Ein Bot. Alle Funktionen.",
+    connection: "Verbindung zu Discord",
+    tagline: "Der ruhige Community-Bot.",
+    infoAddButton: "Zum Server hinzufügen",
     onlineSince: "Online seit",
-    runsOn: "Läuft mit",
-    helpTitle: "Was Nexo kann",
+    helpTitle: "Was du mit Nexo tun kannst",
     helpHint: "Klick auf einen Befehl, um ihn zu benutzen.",
     helpSections: {
         general: "Allgemein",
@@ -44,7 +44,7 @@ export const de: Texts = {
     channels: "Kanäle",
     roles: "Rollen",
     boosts: "Boosts",
-    level: "Stufe",
+    boostTier: "Stufe",
     created: "Erstellt",
     account: "Konto",
     joined: "Beigetreten",
@@ -53,17 +53,21 @@ export const de: Texts = {
     accountPicture: "Kontobild",
     testButton: "Test senden",
     greetingTestSent: (channel: string) => `In ${channel} geschickt.`,
-    greetingNotSetUp: (setup: string) => `Das ist noch nicht eingerichtet: nutze ${setup}.`,
+    greetingNotSetUp: (setup: string) =>
+        `Das ist noch nicht eingerichtet. Richte es mit ${setup} ein.`,
     channelGone: (setup: string) => `Der Kanal dafür ist weg. Wähle mit ${setup} einen neuen.`,
     cannotPost: (channel: string, missing: string) =>
-        `Nexo kann in ${channel} noch nicht schreiben. Gib ihm dort diese Rechte: ${missing}.`,
+        `Nexo kann in ${channel} noch nicht schreiben. Gib ihm dort diese Berechtigungen: ` +
+        `${missing}.`,
     permissionNames: {
+        AttachFiles: "Dateien anhängen",
         ViewChannel: "Kanal ansehen",
         SendMessages: "Nachrichten senden",
         EmbedLinks: "Links einbetten",
         CreatePrivateThreads: "Private Threads erstellen",
         SendMessagesInThreads: "Nachrichten in Threads senden",
         ManageThreads: "Threads und Posts verwalten",
+        ReadMessageHistory: "Nachrichtenverlauf lesen",
         MentionEveryone: "Erwähnung von @everyone, @here und allen Rollen",
     },
     welcome: {
@@ -88,7 +92,7 @@ export const de: Texts = {
         `${role} gehört zu einer Integration, etwa einem Bot oder Server-Boosts; die vergibt ` +
         `Discord selbst.`,
     autoroleNoPermission:
-        "Nexo braucht dafür das Recht „Rollen verwalten“: gib es Nexos Rolle in den " +
+        "Nexo braucht dafür die Berechtigung „Rollen verwalten“: gib sie Nexos Rolle in den " +
         "Servereinstellungen.",
     autoroleAboveYou: (role: string) =>
         `${role} steht nicht unter deiner höchsten Rolle, darum kannst du sie nicht vergeben.`,
@@ -102,11 +106,10 @@ export const de: Texts = {
     warningsTitle: (name: string) => `Verwarnungen von ${name}`,
     warningBy: "von",
     removeButton: "Entfernen",
-    unwarned: (id: number) => `Verwarnung #${id} ist entfernt.`,
     unwarnNotFound: (id: number) => `Auf diesem Server gibt es keine Verwarnung #${id}.`,
-    timedOut: (member: string, until: string) => `${member} ist stummgeschaltet bis ${until}.`,
+    timedOut: (member: string, until: string) => `${member} ist bis ${until} im Timeout.`,
     untimedOut: (member: string) => `${member} kann wieder schreiben.`,
-    notTimedOut: (member: string) => `${member} ist nicht stummgeschaltet.`,
+    notTimedOut: (member: string) => `${member} ist nicht im Timeout.`,
     kicked: (member: string) => `${member} ist vom Server entfernt.`,
     banned: (user: string) => `${user} ist gebannt.`,
     unbanned: (user: string) => `Der Bann von ${user} ist aufgehoben.`,
@@ -118,8 +121,10 @@ export const de: Texts = {
     problemAboveYou: (member: string) =>
         `Die höchste Rolle von ${member} steht nicht unter deiner.`,
     problemAdmin: (member: string) =>
-        `${member} ist Administrator, und Administratoren kann Discord nicht stummschalten.`,
-    problemNoPermission: (permission: string) => `Nexo braucht dafür das Recht „${permission}“.`,
+        `${member} ist Administrator, und Administratoren kann Discord nicht in den Timeout ` +
+        "schicken.",
+    problemNoPermission: (permission: string) =>
+        `Nexo braucht dafür die Berechtigung „${permission}“.`,
     problemAboveNexo: (member: string) =>
         `Die höchste Rolle von ${member} steht nicht unter Nexos. ` +
         "Zieh in den Servereinstellungen unter Rollen Nexos Rolle darüber.",
@@ -128,12 +133,13 @@ export const de: Texts = {
         kick: "Mitglieder kicken, annehmen und ablehnen",
         ban: "Mitglieder bannen",
     },
-    modlogSaved: (channel: string) => `Die Moderation auf diesem Server steht jetzt in ${channel}.`,
+    modlogSaved: (channel: string) =>
+        `Moderationsaktionen werden jetzt in ${channel} protokolliert.`,
     modlogNoAuditLog:
         "Kicks, Banns und Timeouts direkt in Discord erscheinen dort, sobald Nexo das Audit-Log " +
         "einsehen darf; bis dahin nur Nexos Befehle.",
     modlogOff: "Das Mod-Log ist aus.",
-    modlogPublic: "Hinweis: Jedes Mitglied kann diesen Kanal lesen, samt Gründen.",
+    modlogPublic: "Achtung: Jedes Mitglied kann diesen Kanal lesen, auch die Gründe.",
     modlogPrefix: "Mod-Log:",
     modlogTitles: {
         warn: "Verwarnung",
@@ -153,22 +159,62 @@ export const de: Texts = {
     leaderboardTitle: "Bestenliste",
     leaderboardEmpty:
         "Noch hat niemand XP. Mitglieder sammeln sie, indem sie Nachrichten schreiben.",
-    leaderboardYou: (place: number) => `Du: Rang ${place}`,
+    leaderboardYou: (place: number, level: number, xp: number) =>
+        `Dein Platz: **${place}** · Level ${level} · ${xp} XP`,
+    leaderboardNoXp: "Du hast noch keine XP. Du sammelst sie, indem du Nachrichten schreibst.",
     ticketPanelTitle: "Support",
     ticketPanelText:
         "Brauchst du Hilfe vom Team? Öffne ein Ticket: einen privaten Thread, den nur du und das " +
         "Team sehen.",
     ticketOpenButton: "Ticket öffnen",
     ticketCannotRun: (channel: string, missing: string) =>
-        `Nexo kann in ${channel} noch keine Tickets führen. Gib ihm dort diese Rechte: ${missing}.`,
+        `Nexo kann in ${channel} noch keine Tickets führen. Gib ihm dort diese Berechtigungen: ` +
+        `${missing}.`,
     ticketSetUp: (channel: string) =>
-        `Der Ticket-Button ist in ${channel}. Um Tickets zu beenden, lösche die Karte mit dem ` +
-        "Button.",
+        `Der Ticket-Button ist in ${channel}. Wenn keine neuen Tickets mehr kommen sollen, lösch ` +
+        "die Nachricht mit dem Button. Offene Tickets bleiben.",
     ticketTeamNotMentionable: (role: string) =>
         `Nexo erwähnt das Team in jedem Ticket, und du darfst ${role} nicht erwähnen. Mach die ` +
         "Rolle erwähnbar, oder frag jemanden, der alle Rollen erwähnen darf.",
+    ticketUnavailable:
+        "Nexo kann hier gerade keine Tickets öffnen. Sag dem Team bitte auf anderem Weg Bescheid.",
+    ticketWarnEveryone: (channel: string) =>
+        `Achtung: @everyone darf in ${channel} keine „Nachrichten in Threads senden“, also ` +
+        "können Mitglieder in ihrem Ticket nicht schreiben. Erlaub es dort; der Kanal selbst " +
+        "kann schreibgeschützt bleiben.",
+    ticketWarnTeamSize: (role: string, channel: string) =>
+        `Achtung: ${role} hat 100 oder mehr Mitglieder, darum fügt Discord sie nicht zu neuen ` +
+        `Tickets hinzu. Wähl eine kleinere Rolle oder gib dem Team in ${channel} „Threads und ` +
+        "Posts verwalten“, damit es alle Tickets sieht.",
+    levelUpsHere:
+        "Level-ups erscheinen jetzt dort, wo das Mitglied schreibt: bis Level 10 jedes Level, " +
+        "danach jedes fünfte und jedes, das eine Rolle gibt.",
+    levelUpsIn: (channel: string) =>
+        `Level-ups erscheinen jetzt in ${channel}: bis Level 10 jedes Level, danach jedes fünfte ` +
+        "und jedes, das eine Rolle gibt.",
+    levelUpsOff: "Level-ups sind aus. Mitglieder sammeln weiter XP und bekommen ihre Level-Rollen.",
+    levelsReset: (member: string) => `Die XP von ${member} beginnen wieder bei 0.`,
+    levelroleAdded: (role: string, level: number) =>
+        `Mitglieder bekommen ${role} ab Level ${level}. Wer schon darüber ist, bekommt sie mit ` +
+        "der nächsten Nachricht.",
+    levelroleRemoved: (role: string) => `${role} ist keine Level-Rolle mehr.`,
+    levelroleNotThere: (role: string) => `${role} ist keine Level-Rolle.`,
+    levelroleNone: (add: string) => `Noch keine Level-Rollen. Füge eine mit ${add} hinzu.`,
+    levelroleListTitle: "Level-Rollen",
+    dmTitles: {
+        warn: (server: string) => `Verwarnung auf ${server}`,
+        timeout: (server: string) => `Timeout auf ${server}`,
+        kick: (server: string) => `Von ${server} entfernt`,
+        ban: (server: string) => `Von ${server} gebannt`,
+    },
+    dmWarnings: "Verwarnungen bisher",
+    dmKickNote: "Mit einer neuen Einladung kannst du wieder beitreten.",
+    dmNoReply: "Antworten hier erreichen das Team nicht.",
+    dmNotDelivered:
+        "Das Mitglied hat keine Direktnachricht bekommen, weil es keine von diesem Server annimmt.",
     ticketTitle: "Ticket",
-    ticketHello: "Schreib, worum es geht; das Team antwortet hier.",
+    ticketHello: (member: string) =>
+        `${member}, schreib kurz, worum es geht. Das Team antwortet hier.`,
     ticketTeam: "Team",
     ticketCloseButton: "Ticket schließen",
     ticketClosedBy: (member: string) => `Geschlossen von ${member}.`,

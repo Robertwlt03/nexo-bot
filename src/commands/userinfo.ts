@@ -7,6 +7,7 @@ import {
 } from "discord.js";
 import { CARD, card, facts } from "../card.ts";
 import { dateWithAge, firstWithRest } from "../format.ts";
+import { icon } from "../icons.ts";
 import { en, texts } from "../texts.ts";
 import type { Command } from "./command.ts";
 import { chosenPerson, memberOption } from "./member-option.ts";
@@ -47,7 +48,7 @@ export const userinfo: Command = {
             ]),
         ].join("\n");
         const picture = (member ?? user).displayAvatarURL({ size: 256 });
-        const title = user.bot ? `${name} 🤖` : name;
+        const title = user.bot ? `${icon("bot")}${name}` : name;
         return interaction.reply({ components: [card(title, text, { picture })], flags: CARD });
     },
 };

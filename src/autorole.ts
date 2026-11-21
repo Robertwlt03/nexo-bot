@@ -1,5 +1,4 @@
 import type { GuildMember, Role } from "discord.js";
-import type { Settings } from "./settings.ts";
 
 /** Why Nexo cannot give a role to new members, or nothing when it can. */
 export type AutoroleProblem = "everyone" | "managed" | "above-you" | "no-permission" | "too-high";
@@ -24,11 +23,15 @@ export function autoroleProblem(
     return undefined;
 }
 
-/** Gives a new member the server's automatic roles that Nexo can still give. */
-export async function giveAutoroles(member: GuildMember, settings: Settings): Promise<void> {
-    const roles = settings
-        .autoroles(member.guild.id)
+/**
+ * Gives a member those of the roles they lack and Nexo can still give; Discord is asked only
+ * then, so calling it often costs nothing.
+ */
+export async function giveRoles(member: GuildMember, ids: string[], reason: string): Promise<void> {
+    const roles = ids
         .map((id) => member.guild.roles.cache.get(id))
-        .filter((role): role is Role => role?.editable === true);
-    if (roles.length > 0) await member.roles.add(roles, "Nexo: automatic role for new members");
+        .filter(
+            (role): role is Role => role?.editable === true && !member.roles.cache.has(role.id),
+        );
+    if (roles.length > 0) await member.roles.add(roles, reason);
 }

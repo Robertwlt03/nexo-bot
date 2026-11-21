@@ -21,7 +21,7 @@ import { commandTexts, type Texts, texts } from "./texts.ts";
 export type ModlogAction = keyof Texts["modlogTitles"];
 
 /** Each action's icon; taking an action back shares one. */
-const ICONS: Record<ModlogAction, IconName> = {
+export const ICONS: Record<ModlogAction, IconName> = {
     warn: "warn",
     timeout: "timeout",
     kick: "leave",
@@ -58,7 +58,7 @@ export function modlogCard(t: Texts, entry: ModlogEntry): ContainerBuilder {
 }
 
 /**
- * Posts the entry in the server's mod log, if it has one, in the moderator's language. Runs after
+ * Posts the entry in the server's mod log, if it has one, in the log's language. Runs after
  * the moderator's answer, so a slow log never costs Discord's three seconds to answer; when the
  * post fails, the moderator gets the reason as a private follow-up.
  */
@@ -67,10 +67,13 @@ export async function logModeration(
     settings: Settings,
     entry: Omit<ModlogEntry, "moderatorId">,
 ): Promise<void> {
-    const channelId = settings.modlog(interaction.guildId)?.channelId;
-    if (!channelId) return;
+    const modlog = settings.modlog(interaction.guildId);
+    if (!modlog) return;
+    const { channelId } = modlog;
+    // The log speaks one language, the one it was set up in; the moderator hears of a problem
+    // in theirs.
+    const logged = modlogCard(texts(modlog.locale), { ...entry, moderatorId: interaction.user.id });
     const t = texts(interaction.locale);
-    const logged = modlogCard(t, { ...entry, moderatorId: interaction.user.id });
     const result = await post(interaction.guild, channelId, {
         components: [logged],
         flags: CARD,

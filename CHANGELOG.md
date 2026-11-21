@@ -18,8 +18,8 @@ All notable changes to this project are listed here. The format follows
 - `/autorole`: roles that new members get on joining. Nexo checks each role when it is added and
   names what stands in the way: @everyone, a role of an integration, a role not below the
   asker's own, Manage Roles, or a role above Nexo's own.
-- Level and XP: 15 to 25 XP per message, at most every 20 seconds, a 🎉 in the channel at each
-  new level, `/rank` and `/leaderboard`.
+- Level and XP: 15 to 25 XP per message, at most every 20 seconds, a level-up card, `/rank` and
+  `/leaderboard`.
 - Moderation: `/warn`, `/warnings` and `/unwarn`, `/timeout` and `/untimeout`, `/kick`, `/ban` and
   `/unban`. Nexo refuses to act on the moderator, itself, the owner or anyone who ranks as high
   as the moderator, and writes the moderator's name into the audit log with the reason.
@@ -43,9 +43,55 @@ All notable changes to this project are listed here. The format follows
   the card, which notifies them when `ping` is on. `/welcome setup` answers with a test button,
   `/warnings` has a remove button on each warning, `/help` and every hint to a command can be
   clicked, and `/avatar` links the account picture with a button.
-- One design, Nexo Mono: Nexo's amber is the only color, icons are Heroicons uploaded as the
-  app's own emojis, and facts show as small gray labels above their values. The welcome and the
-  goodbye show a picture Nexo draws of the member (their picture in an amber ring, their name,
-  the server and, for a welcome, their member number), and `/rank` draws a ring that fills
-  toward the next level. `/help` comes in sections, and level-ups are a card.
+- One design, matching Nexo's wooden logo: Nexo's amber is the one accent, icons are Heroicons
+  uploaded as the app's own emojis, and facts show as small gray labels above their values. The
+  welcome and the goodbye show a picture Nexo draws of the member (their picture in an amber ring,
+  their name, the server and, for a welcome, their member number), and `/rank` draws a ring that
+  fills toward the next level. `/help` comes in sections, and level-ups are a card.
 - `/ping` shows "Nexo is thinking…" first, so its answer no longer counts as edited.
+
+- `/levels`: level-up cards where members write, in one channel, or off; a card for every level
+  up to 10, then every fifth and every level that gives a role; `reset` starts a member's XP
+  again. Private threads, such as tickets, earn no XP.
+- `/levelrole`: roles members get from a level on, free; checked like `/autorole`, and members who
+  are past the level get them with their next message.
+- Moderation tells the member by direct message: where, why, until when and how many warnings,
+  without the moderator's name. The moderator hears when the message could not be delivered.
+- When Nexo is removed from a server, it deletes everything it kept about it.
+
+### Removed
+
+- `/ping`: `/info` shows the connection to Discord. `/unwarn`: the remove button in `/warnings`
+  does the same.
+
+### Fixed
+
+- `/welcome setup` and `/goodbye setup` check Attach Files too, which the picture needs.
+- A banned member gets no goodbye, so a raid no longer posts a picture of every raider.
+- A ticket whose card could not be posted is deleted again instead of blocking the member's next
+  one; `/ticket setup` warns when members can't write in threads or the team role is too large for
+  Discord to add to tickets.
+- `/help` answers privately and lists only the commands the asker may use; `/leaderboard` tells
+  the asker their own place privately.
+- Names in Nexo's pictures leave out emoji, show fancy letters plainly and draw small capitals and
+  rare accents with Noto Sans, instead of boxes; the small labels are large enough to read on a
+  phone.
+- The bot is called Nexo everywhere and keeps its wooden logo, now with its wooden banner on the
+  profile. The welcome, goodbye and `/rank` pictures sit on the same walnut, with fireflies and
+  cream names.
+- `/info` shows the new tagline, "The quiet community bot.", and a button to add Nexo, instead of
+  versions and a server count.
+- The mod log speaks one language, the one it was set up in, for Nexo's commands too.
+- Automatic roles wait until a new member accepts the rules, so Discord's rules screening still
+  applies.
+- `/unwarn` and the remove button refuse a warning of the moderator themself or of someone who
+  ranks as high, as `/warn` does.
+- Level-ups skip channels where Nexo may not write.
+- Moderation, greeting tests and closing a ticket answer "Nexo is thinking" first, so a slow
+  Discord no longer runs out the three seconds it waits for an answer.
+- `/ticket setup` in a channel that has the button already updates it instead of posting another.
+- `/serverinfo` no longer counts threads as channels.
+- The `/rank` picture shows the place large instead of the English word "RANK"; the goodbye
+  picture is gray all over; buttons are gray with Nexo's icons.
+- Clearer texts: "timeout" instead of "mute", Discord's own German word for permissions, and
+  the `/ping` connection named in words.

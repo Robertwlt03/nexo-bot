@@ -26,6 +26,11 @@ export function rollXp(random: () => number = Math.random): number {
     return min + Math.floor(random() * (max - min + 1));
 }
 
+/** Whether a level-up gets a card: each level up to 10, then every fifth, so it stays rare. */
+export function announced(level: number): boolean {
+    return level <= 10 || level % 5 === 0;
+}
+
 /** The level a member just reached with the XP they earned, or nothing if it stayed the same. */
 export function reachedLevel(totalXp: number, earned: number): number | undefined {
     const { level } = levelFor(totalXp);

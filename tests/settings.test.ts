@@ -83,6 +83,8 @@ describe("warnings", () => {
         });
         expect(settings.warnings("server", "nobody")).toEqual([]);
 
+        expect(settings.warningUser("server", first)).toBe("lena");
+        expect(settings.warningUser("other", first)).toBeUndefined();
         // a number from another server
         expect(settings.removeWarning("other", first)).toBeUndefined();
         expect(settings.removeWarning("server", first)).toBe("lena");
@@ -132,6 +134,16 @@ describe("tickets", () => {
         expect(settings.ticket("server", "lena")).toBeUndefined();
         expect(settings.ticket("other", "lena")).toBe("c");
     });
+
+    it("remember one panel per channel, replaced when it is posted again", () => {
+        const settings = openSettings(":memory:");
+        expect(settings.ticketPanel("server", "support")).toBeUndefined();
+        settings.saveTicketPanel("server", "support", "first");
+        settings.saveTicketPanel("server", "support", "second");
+        settings.saveTicketPanel("server", "help", "third");
+        expect(settings.ticketPanel("server", "support")).toBe("second");
+        expect(settings.ticketPanel("server", "help")).toBe("third");
+    });
 });
 
 describe("XP", () => {
@@ -152,5 +164,67 @@ describe("XP", () => {
             { userId: "tom", totalXp: 50 },
             { userId: "lena", totalXp: 35 },
         ]);
+    });
+});
+
+describe("levels", () => {
+    it("keep where level-ups go: the default, a channel, or nowhere", () => {
+        const settings = openSettings(":memory:");
+        expect(settings.levelUpChannel("server")).toBeUndefined();
+        settings.saveLevelUpChannel("server", "c");
+        expect(settings.levelUpChannel("server")).toBe("c");
+        settings.saveLevelUpChannel("server", null);
+        expect(settings.levelUpChannel("server")).toBeNull();
+        settings.saveLevelUpChannel("server", undefined);
+        expect(settings.levelUpChannel("server")).toBeUndefined();
+    });
+
+    it("keep level roles lowest first, move a role saved again, and remove it once", () => {
+        const settings = openSettings(":memory:");
+        settings.saveLevelRole("server", "veteran", 20);
+        settings.saveLevelRole("server", "regular", 5);
+        settings.saveLevelRole("server", "veteran", 10);
+        expect(settings.levelRoles("server")).toEqual([
+            { roleId: "regular", level: 5 },
+            { roleId: "veteran", level: 10 },
+        ]);
+        expect(settings.removeLevelRole("server", "regular")).toBe(true);
+        expect(settings.removeLevelRole("server", "regular")).toBe(false);
+    });
+
+    it("can take a member's XP back to 0", () => {
+        const settings = openSettings(":memory:");
+        settings.addXp("server", "spammer", 500);
+        settings.resetXp("server", "spammer");
+        expect(settings.totalXp("server", "spammer")).toBe(0);
+    });
+});
+
+describe("forgetting a server", () => {
+    it("deletes every row of that server and keeps the others", () => {
+        const settings = openSettings(":memory:");
+        for (const server of ["gone", "kept"]) {
+            settings.saveGreeting("welcome", server, {
+                channelId: "c",
+                message: "Hi",
+                ping: false,
+            });
+            settings.addWarning(server, "lena", "mod", "spam");
+            settings.addXp(server, "lena", 50);
+            settings.saveModlog(server, "log", Locale.German);
+            settings.saveTicket(server, "lena", "thread");
+            settings.addAutorole(server, "role");
+            settings.saveLevelRole(server, "role", 5);
+        }
+        settings.forgetServer("gone");
+        expect(settings.greeting("welcome", "gone")).toBeUndefined();
+        expect(settings.warnings("gone", "lena")).toEqual([]);
+        expect(settings.totalXp("gone", "lena")).toBe(0);
+        expect(settings.modlog("gone")).toBeUndefined();
+        expect(settings.ticket("gone", "lena")).toBeUndefined();
+        expect(settings.autoroles("gone")).toEqual([]);
+        expect(settings.levelRoles("gone")).toEqual([]);
+        expect(settings.totalXp("kept", "lena")).toBe(50);
+        expect(settings.warnings("kept", "lena")).toHaveLength(1);
     });
 });

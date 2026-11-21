@@ -64,6 +64,25 @@ export function openSettings(path: string) {
         thread_id TEXT NOT NULL,
         PRIMARY KEY (guild_id, user_id)
     )`);
+    // Where level-up cards go. No row: where the member wrote; a row without a channel: nowhere.
+    database.exec(`CREATE TABLE IF NOT EXISTS level_up (
+        guild_id TEXT PRIMARY KEY,
+        channel_id TEXT
+    )`);
+    // Roles members get from a level on; each role belongs to one level.
+    database.exec(`CREATE TABLE IF NOT EXISTS level_role (
+        guild_id TEXT NOT NULL,
+        role_id TEXT NOT NULL,
+        level INTEGER NOT NULL,
+        PRIMARY KEY (guild_id, role_id)
+    )`);
+    // The message with the button that opens tickets, at most one per channel.
+    database.exec(`CREATE TABLE IF NOT EXISTS ticket_panel (
+        guild_id TEXT NOT NULL,
+        channel_id TEXT NOT NULL,
+        message_id TEXT NOT NULL,
+        PRIMARY KEY (guild_id, channel_id)
+    )`);
     database.exec(`CREATE TABLE IF NOT EXISTS autorole (
         guild_id TEXT NOT NULL,
         role_id TEXT NOT NULL,
@@ -98,6 +117,9 @@ export function openSettings(path: string) {
     const selectWarnings =
         database.prepare(`SELECT id, moderator_id, reason, created_at FROM warning
         WHERE guild_id = ? AND user_id = ? ORDER BY id DESC`);
+    const selectWarningUser = database.prepare(
+        "SELECT user_id FROM warning WHERE guild_id = ? AND id = ?",
+    );
     const removeWarning = database.prepare(
         "DELETE FROM warning WHERE guild_id = ? AND id = ? RETURNING user_id",
     );
@@ -124,12 +146,53 @@ export function openSettings(path: string) {
     const saveTicket = database.prepare(`INSERT INTO ticket VALUES (?, ?, ?)
         ON CONFLICT (guild_id, user_id) DO UPDATE SET thread_id = excluded.thread_id`);
     const closeTicket = database.prepare("DELETE FROM ticket WHERE thread_id = ?");
+    const selectTicketPanel = database.prepare(
+        "SELECT message_id FROM ticket_panel WHERE guild_id = ? AND channel_id = ?",
+    );
+    const saveTicketPanel = database.prepare(`INSERT INTO ticket_panel VALUES (?, ?, ?)
+        ON CONFLICT (guild_id, channel_id) DO UPDATE SET message_id = excluded.message_id`);
+    const resetXp = database.prepare("DELETE FROM xp WHERE guild_id = ? AND user_id = ?");
+    const selectLevelUp = database.prepare("SELECT channel_id FROM level_up WHERE guild_id = ?");
+    const saveLevelUp = database.prepare(`INSERT INTO level_up VALUES (?, ?)
+        ON CONFLICT (guild_id) DO UPDATE SET channel_id = excluded.channel_id`);
+    const removeLevelUp = database.prepare("DELETE FROM level_up WHERE guild_id = ?");
+    const selectLevelRoles = database.prepare(
+        "SELECT role_id, level FROM level_role WHERE guild_id = ? ORDER BY level, role_id",
+    );
+    const saveLevelRole = database.prepare(`INSERT INTO level_role VALUES (?, ?, ?)
+        ON CONFLICT (guild_id, role_id) DO UPDATE SET level = excluded.level`);
+    const removeLevelRole = database.prepare(
+        "DELETE FROM level_role WHERE guild_id = ? AND role_id = ?",
+    );
     const selectTop = database.prepare(
         `SELECT user_id, total_xp FROM xp WHERE guild_id = ?
             ORDER BY total_xp DESC, user_id LIMIT ?`,
     );
 
+    // Every table keys its rows by server, so leaving a server can empty them all, those added
+    // later included; the names come from SQLite itself, never from what someone typed.
+    const tables = (
+        database.prepare("SELECT name FROM sqlite_master WHERE type = 'table'").all() as {
+            name: string;
+        }[]
+    )
+        .map(({ name }) => name)
+        .filter((name) => !name.startsWith("sqlite_"));
+
     return {
+        /** Deletes everything Nexo keeps about a server, for when it is removed from it. */
+        forgetServer(guildId: string): void {
+            database.exec("BEGIN");
+            try {
+                for (const table of tables) {
+                    database.prepare(`DELETE FROM ${table} WHERE guild_id = ?`).run(guildId);
+                }
+                database.exec("COMMIT");
+            } catch (error) {
+                database.exec("ROLLBACK");
+                throw error;
+            }
+        },
         greeting(kind: GreetingKind, guildId: string): GreetingSettings | undefined {
             const row = greetings[kind].select.get(guildId) as GreetingRow | undefined;
             return row && { channelId: row.channel_id, message: row.message, ping: row.ping === 1 };
@@ -153,7 +216,7 @@ export function openSettings(path: string) {
         removeAutorole(guildId: string, roleId: string): boolean {
             return removeRole.run(guildId, roleId).changes > 0;
         },
-        /** Keeps a warning and gives back its number, which /unwarn takes. */
+        /** Keeps a warning and gives back its number. */
         addWarning(guildId: string, userId: string, moderatorId: string, reason: string): number {
             return Number(
                 addWarning.run(guildId, userId, moderatorId, reason, Date.now()).lastInsertRowid,
@@ -167,6 +230,10 @@ export function openSettings(path: string) {
                 reason: row.reason,
                 createdAt: new Date(row.created_at),
             }));
+        },
+        /** Whom a warning is for; undefined when the server has no such number. */
+        warningUser(guildId: string, id: number): string | undefined {
+            return (selectWarningUser.get(guildId, id) as { user_id: string } | undefined)?.user_id;
         },
         /** Whom the removed warning was for; undefined when the server has no such number. */
         removeWarning(guildId: string, id: number): string | undefined {
@@ -199,6 +266,44 @@ export function openSettings(path: string) {
         },
         closeTicket(threadId: string): void {
             closeTicket.run(threadId);
+        },
+        /** The message with the ticket button in a channel; undefined when there is none. */
+        ticketPanel(guildId: string, channelId: string): string | undefined {
+            const row = selectTicketPanel.get(guildId, channelId) as
+                | { message_id: string }
+                | undefined;
+            return row?.message_id;
+        },
+        saveTicketPanel(guildId: string, channelId: string, messageId: string): void {
+            saveTicketPanel.run(guildId, channelId, messageId);
+        },
+        /** Takes a member off the leaderboard: their XP starts again at 0. */
+        resetXp(guildId: string, userId: string): void {
+            resetXp.run(guildId, userId);
+        },
+        /** Where level-up cards go: undefined where the member wrote (default), null nowhere. */
+        levelUpChannel(guildId: string): string | null | undefined {
+            const row = selectLevelUp.get(guildId) as { channel_id: string | null } | undefined;
+            return row?.channel_id;
+        },
+        /** Sets where level-up cards go: a channel, null for nowhere, undefined for the default. */
+        saveLevelUpChannel(guildId: string, channelId: string | null | undefined): void {
+            if (channelId === undefined) removeLevelUp.run(guildId);
+            else saveLevelUp.run(guildId, channelId);
+        },
+        /** The level roles of a server, lowest level first. */
+        levelRoles(guildId: string): { roleId: string; level: number }[] {
+            return (selectLevelRoles.all(guildId) as { role_id: string; level: number }[]).map(
+                (row) => ({ roleId: row.role_id, level: row.level }),
+            );
+        },
+        /** A role already in the list moves to the new level. */
+        saveLevelRole(guildId: string, roleId: string, level: number): void {
+            saveLevelRole.run(guildId, roleId, level);
+        },
+        /** False when the role was not in the list. */
+        removeLevelRole(guildId: string, roleId: string): boolean {
+            return removeLevelRole.run(guildId, roleId).changes > 0;
         },
         /** Adds XP to a member and gives back their new total. */
         addXp(guildId: string, userId: string, amount: number): number {

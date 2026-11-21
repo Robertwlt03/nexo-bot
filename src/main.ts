@@ -8,16 +8,15 @@ import {
     Options,
     type PartialGuildMember,
     Partials,
-    userMention,
 } from "discord.js";
-import { giveAutoroles } from "./autorole.ts";
-import { CARD, card } from "./card.ts";
+import { giveRoles } from "./autorole.ts";
 import { commands } from "./commands/index.ts";
 import { rememberCommandIds } from "./commands/mention.ts";
 import { readConfig } from "./config.ts";
 import { sendGreeting } from "./greeting.ts";
-import { icon, syncIcons } from "./icons.ts";
-import { reachedLevel, rollXp, xpCooldowns } from "./leveling.ts";
+import { syncIcons } from "./icons.ts";
+import { xpCooldowns } from "./leveling.ts";
+import { earnXp } from "./levelup.ts";
 import { logAuditEntry } from "./modlog.ts";
 import { type GreetingKind, openSettings } from "./settings.ts";
 import { texts } from "./texts.ts";
@@ -94,11 +93,15 @@ client.on(Events.InteractionCreate, async (interaction) => {
             content: texts(interaction.locale).error,
             flags: MessageFlags.Ephemeral,
         };
-        // The answer can fail too, such as after Discord's three seconds to answer;
-        // that must not end the bot.
-        await (interaction.replied || interaction.deferred
-            ? interaction.followUp(reply)
-            : interaction.reply(reply)
+        // A deferred command waits for its answer; a deferred button would have its own card
+        // edited instead, so it gets a new message. The answer can fail too, such as after
+        // Discord's three seconds to answer, and that must not end the bot.
+        const fillIn = interaction.deferred && !interaction.replied && !interaction.isButton();
+        await (fillIn
+            ? interaction.editReply({ content: reply.content })
+            : interaction.replied || interaction.deferred
+              ? interaction.followUp(reply)
+              : interaction.reply(reply)
         ).catch((replyError) => console.error("The error answer failed too:", replyError));
     }
 });
@@ -116,43 +119,37 @@ async function greet(kind: GreetingKind, member: GuildMember | PartialGuildMembe
     }
 }
 
+/** Gives a member the server's automatic roles, and logs what went wrong. */
+async function autoroles(member: GuildMember): Promise<void> {
+    const ids = settings.autoroles(member.guild.id);
+    await giveRoles(member, ids, "Nexo: automatic role for new members").catch((error: unknown) =>
+        console.error(`Could not give the automatic roles to ${member.user.tag}:`, error),
+    );
+}
+
 // A bot someone adds or removes is not a member to greet or to give roles.
 client.on(Events.GuildMemberAdd, async (member) => {
     if (member.user.bot) return;
-    await Promise.all([
-        greet("welcome", member),
-        giveAutoroles(member, settings).catch((error: unknown) =>
-            console.error(`Could not give the automatic roles to ${member.user.tag}:`, error),
-        ),
-    ]);
+    // On a server with Discord's rules screening, a role given before the member accepts the
+    // rules lets them skip it; they get their roles once they accept (below).
+    await Promise.all([greet("welcome", member), member.pending ? undefined : autoroles(member)]);
+});
+
+// ponytail: a member who accepts the rules after Nexo restarted comes uncached, without the
+// earlier `pending`, and gets no roles; check `before.partial` too only with a way to tell
+// roles an admin took away.
+client.on(Events.GuildMemberUpdate, async (before, after) => {
+    if (before.pending && !after.pending && !after.user.bot) await autoroles(after);
 });
 
 const cooldowns = xpCooldowns();
 
 client.on(Events.MessageCreate, async (message) => {
     if (!message.inGuild() || message.author.bot || message.webhookId || message.system) return;
-    if (!cooldowns.take(`${message.guildId}:${message.author.id}`, Date.now())) return;
-    try {
-        const earned = rollXp();
-        const total = settings.addXp(message.guildId, message.author.id, earned);
-        const level = reachedLevel(total, earned);
-        if (level === undefined) return;
-        // "Level" reads the same in German and English, so the card needs no language. It
-        // mentions the member to notify them.
-        const picture = message.member?.displayAvatarURL({ size: 256 });
-        await message.channel.send({
-            components: [
-                card(`${icon("levelup")}Level ${level}`, userMention(message.author.id), {
-                    picture,
-                }),
-            ],
-            flags: CARD,
-            allowedMentions: { users: [message.author.id] },
-        });
-    } catch (error) {
-        // A failed write or announcement costs one message's XP, never the bot.
-        console.error(`Could not give XP to ${message.author.tag}:`, error);
-    }
+    // A failed write or card costs one message's XP, never the bot.
+    await earnXp(message, settings, cooldowns).catch((error: unknown) =>
+        console.error(`Could not give XP to ${message.author.tag}:`, error),
+    );
 });
 
 client.on(Events.GuildAuditLogEntryCreate, (entry, guild) =>
@@ -162,8 +159,25 @@ client.on(Events.GuildAuditLogEntryCreate, (entry, guild) =>
 );
 
 client.on(Events.GuildMemberRemove, async (member) => {
-    if (member.user.bot) return;
-    await greet("goodbye", member);
+    if (member.user.bot || !settings.greeting("goodbye", member.guild.id)) return;
+    // A banned member gets no goodbye: in a raid it would post a picture of every raider.
+    // Without Ban Members Nexo can't tell, and says goodbye.
+    // ponytail: a kick still gets one; tell it apart through the audit log if servers mind.
+    const banned = await member.guild.bans.fetch(member.id).then(
+        () => true,
+        () => false,
+    );
+    if (!banned) await greet("goodbye", member);
+});
+
+// Removed from a server, Nexo forgets it: its settings, warnings, XP and tickets. Discord reports
+// a server that is only out of reach for a while differently (GuildUnavailable).
+client.on(Events.GuildDelete, (guild) => {
+    try {
+        settings.forgetServer(guild.id);
+    } catch (error) {
+        console.error(`Could not forget the server ${guild.name}:`, error);
+    }
 });
 
 await client.login(config.token);

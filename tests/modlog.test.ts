@@ -98,12 +98,14 @@ describe("logModeration", () => {
         expect(followUp).not.toHaveBeenCalled();
     });
 
-    it("posts the card and tells the moderator nothing more", async () => {
+    it("posts the card in the log's language and tells the moderator nothing more", async () => {
         const { interaction, send, followUp } = moderatorOn([]);
         const settings = openSettings(":memory:");
         settings.saveModlog("server", "log", Locale.German);
+        // The moderator's Discord is English; the log was set up in German.
         await logModeration(interaction, settings, entry);
         expect(send).toHaveBeenCalledOnce();
+        expect(textOf(send.mock.calls[0]?.[0].components[0])).toContain(de.modlogTitles.kick);
         expect(followUp).not.toHaveBeenCalled();
     });
 

@@ -10,8 +10,9 @@ import {
     PermissionFlagsBits,
     SlashCommandBuilder,
 } from "discord.js";
-import { missingPermissions } from "../channel.ts";
+import { missingPermissions, PICTURE_PERMISSIONS } from "../channel.ts";
 import { sendGreeting } from "../greeting.ts";
+import { iconButton } from "../icons.ts";
 import type { GreetingKind, Settings } from "../settings.ts";
 import { commandTexts, en, type Texts, texts } from "../texts.ts";
 import type { Command } from "./command.ts";
@@ -94,7 +95,8 @@ export function greetingCommand(kind: GreetingKind): Command {
             switch (interaction.options.getSubcommand()) {
                 case commandTexts.setupName: {
                     const channel = interaction.options.getChannel(commandTexts.channelName, true);
-                    const missing = missingPermissions(channel);
+                    // The greeting carries a picture Nexo draws.
+                    const missing = missingPermissions(channel, PICTURE_PERMISSIONS);
                     if (missing.length > 0) {
                         const names = missing.map((permission) => t.permissionNames[permission]);
                         return answer(t.cannotPost(channelMention(channel.id), names.join(", ")));
@@ -112,10 +114,13 @@ export function greetingCommand(kind: GreetingKind): Command {
                             saved?.ping ??
                             false,
                     });
-                    const test = new ButtonBuilder()
-                        .setCustomId(`${kind}:test`)
-                        .setStyle(ButtonStyle.Primary)
-                        .setLabel(t.testButton);
+                    const test = iconButton(
+                        new ButtonBuilder()
+                            .setCustomId(`${kind}:test`)
+                            .setStyle(ButtonStyle.Secondary)
+                            .setLabel(t.testButton),
+                        "send",
+                    );
                     return interaction.reply({
                         content: t[kind].saved(channelMention(channel.id)),
                         components: [new ActionRowBuilder<ButtonBuilder>().addComponents(test)],
@@ -123,7 +128,11 @@ export function greetingCommand(kind: GreetingKind): Command {
                     });
                 }
                 case commandTexts.greetingTestName:
-                    return answer(await tryGreeting(kind, interaction.member, settings, t));
+                    // Drawing and posting the picture can outlast Discord's three seconds.
+                    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+                    return interaction.editReply(
+                        await tryGreeting(kind, interaction.member, settings, t),
+                    );
                 case commandTexts.offName:
                     settings.removeGreeting(kind, guildId);
                     return answer(t[kind].off);
@@ -137,8 +146,8 @@ export function greetingCommand(kind: GreetingKind): Command {
             if (!interaction.inCachedGuild()) {
                 return interaction.reply({ content: t.serverOnly, flags: MessageFlags.Ephemeral });
             }
-            const content = await tryGreeting(kind, interaction.member, settings, t);
-            return interaction.reply({ content, flags: MessageFlags.Ephemeral });
+            await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+            return interaction.editReply(await tryGreeting(kind, interaction.member, settings, t));
         },
     };
 }

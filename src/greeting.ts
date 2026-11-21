@@ -1,7 +1,7 @@
 import type { GuildMember, MessageCreateOptions, PartialGuildMember } from "discord.js";
 import { CARD, card, drawn } from "./card.ts";
 import { post } from "./channel.ts";
-import { avatarData, greetingImage } from "./images.ts";
+import { avatarData, drawableName, greetingImage } from "./images.ts";
 import type { GreetingKind, GreetingSettings } from "./settings.ts";
 
 /** Someone who joins or, for a goodbye, has just left; then Discord may send only part of them. */
@@ -42,7 +42,7 @@ export async function greetingMessage(
         `${kind}.png`,
         greetingImage({
             avatar,
-            name: member.displayName,
+            name: drawableName(member.displayName, member.user.username),
             server: member.guild.name,
             number: kind === "welcome" ? member.guild.memberCount : undefined,
         }),

@@ -1,13 +1,11 @@
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { Resvg } from "@resvg/resvg-js";
-import type { ClientApplication } from "discord.js";
+import type { ButtonBuilder, ClientApplication } from "discord.js";
 import { NEXO_AMBER } from "./card.ts";
 
 /** Nexo's icons, all from Heroicons (outline, 24 px), by what they stand for. */
 const ICONS = {
-    ping: "bolt",
-    info: "information-circle",
     general: "squares-2x2",
     server: "server-stack",
     members: "users",
@@ -28,6 +26,9 @@ const ICONS = {
     undo: "check-circle",
     ticket: "ticket",
     closed: "lock-closed",
+    bot: "cpu-chip",
+    send: "paper-airplane",
+    add: "plus-circle",
 } as const;
 export type IconName = keyof typeof ICONS;
 
@@ -60,6 +61,12 @@ export async function syncIcons(application: ClientApplication): Promise<void> {
             }));
         ids.set(name, emoji.id);
     }
+}
+
+/** A button with an icon in front of its label; before the icons are synced, the label alone. */
+export function iconButton(button: ButtonBuilder, name: IconName): ButtonBuilder {
+    const id = ids.get(name);
+    return id ? button.setEmoji({ id, name: `${PREFIX}${name}` }) : button;
 }
 
 /** An icon to put in front of a text; nothing before the icons are synced. */

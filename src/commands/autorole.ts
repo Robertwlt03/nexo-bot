@@ -1,7 +1,9 @@
 import {
+    type ChatInputCommandInteraction,
     InteractionContextType,
     MessageFlags,
     PermissionFlagsBits,
+    type Role,
     roleMention,
     SlashCommandBuilder,
     type SlashCommandSubcommandBuilder,
@@ -9,7 +11,7 @@ import {
 import { autoroleProblem } from "../autorole.ts";
 import { card, PRIVATE_CARD } from "../card.ts";
 import { icon } from "../icons.ts";
-import { commandTexts, en, texts } from "../texts.ts";
+import { commandTexts, en, type Texts, texts } from "../texts.ts";
 import type { Command } from "./command.ts";
 import { commandMention } from "./mention.ts";
 
@@ -23,6 +25,40 @@ function withRole(subcommand: SlashCommandSubcommandBuilder): SlashCommandSubcom
     );
 }
 
+/**
+ * Why Nexo won't hand out a role for the asker, in their language, or undefined when it will: the
+ * checks /autorole and /levelrole share.
+ */
+export function roleProblem(
+    interaction: ChatInputCommandInteraction<"cached">,
+    role: Role,
+    t: Texts,
+): string | undefined {
+    const { guild, member: asker } = interaction;
+    const mention = roleMention(role.id);
+    switch (
+        autoroleProblem(role, guild.id, {
+            askerAboveRole:
+                asker.id === guild.ownerId || asker.roles.highest.comparePositionTo(role) > 0,
+            canManageRoles:
+                guild.members.me?.permissions.has(PermissionFlagsBits.ManageRoles) ?? false,
+        })
+    ) {
+        case "everyone":
+            return t.autoroleEveryone;
+        case "managed":
+            return t.autoroleManaged(mention);
+        case "above-you":
+            return t.autoroleAboveYou(mention);
+        case "no-permission":
+            return t.autoroleNoPermission;
+        case "too-high":
+            return t.autoroleTooHigh(mention);
+        default:
+            return undefined;
+    }
+}
+
 export const autorole: Command = {
     data: new SlashCommandBuilder()
         .setName("autorole")
@@ -32,20 +68,20 @@ export const autorole: Command = {
         .addSubcommand((add) =>
             withRole(
                 add
-                    .setName(commandTexts.autoroleAddName)
+                    .setName(commandTexts.addName)
                     .setDescription(commandTexts.autoroleAddDescription),
             ),
         )
         .addSubcommand((remove) =>
             withRole(
                 remove
-                    .setName(commandTexts.autoroleRemoveName)
+                    .setName(commandTexts.removeName)
                     .setDescription(commandTexts.autoroleRemoveDescription),
             ),
         )
         .addSubcommand((list) =>
             list
-                .setName(commandTexts.autoroleListName)
+                .setName(commandTexts.listName)
                 .setDescription(commandTexts.autoroleListDescription),
         ),
 
@@ -57,38 +93,18 @@ export const autorole: Command = {
         const { guild, guildId } = interaction;
 
         switch (interaction.options.getSubcommand()) {
-            case commandTexts.autoroleAddName: {
+            case commandTexts.addName: {
                 const role = interaction.options.getRole(commandTexts.roleOptionName, true);
                 const mention = roleMention(role.id);
-                const asker = interaction.member;
-                switch (
-                    autoroleProblem(role, guildId, {
-                        askerAboveRole:
-                            asker.id === guild.ownerId ||
-                            asker.roles.highest.comparePositionTo(role) > 0,
-                        canManageRoles:
-                            guild.members.me?.permissions.has(PermissionFlagsBits.ManageRoles) ??
-                            false,
-                    })
-                ) {
-                    case "everyone":
-                        return answer(t.autoroleEveryone);
-                    case "managed":
-                        return answer(t.autoroleManaged(mention));
-                    case "above-you":
-                        return answer(t.autoroleAboveYou(mention));
-                    case "no-permission":
-                        return answer(t.autoroleNoPermission);
-                    case "too-high":
-                        return answer(t.autoroleTooHigh(mention));
-                }
+                const problem = roleProblem(interaction, role, t);
+                if (problem) return answer(problem);
                 return answer(
                     settings.addAutorole(guildId, role.id)
                         ? t.autoroleAdded(mention)
                         : t.autoroleAlready(mention),
                 );
             }
-            case commandTexts.autoroleRemoveName: {
+            case commandTexts.removeName: {
                 const role = interaction.options.getRole(commandTexts.roleOptionName, true);
                 const mention = roleMention(role.id);
                 return answer(
@@ -97,7 +113,7 @@ export const autorole: Command = {
                         : t.autoroleNotThere(mention),
                 );
             }
-            case commandTexts.autoroleListName: {
+            case commandTexts.listName: {
                 // A role deleted from the server can't be picked for remove; the list drops it.
                 const ids = settings.autoroles(guildId).filter((id) => {
                     if (guild.roles.cache.has(id)) return true;
@@ -105,9 +121,7 @@ export const autorole: Command = {
                     return false;
                 });
                 if (ids.length === 0) {
-                    return answer(
-                        t.autoroleNone(commandMention("autorole", commandTexts.autoroleAddName)),
-                    );
+                    return answer(t.autoroleNone(commandMention("autorole", commandTexts.addName)));
                 }
                 const list = ids.map(roleMention).join("\n");
                 return interaction.reply({

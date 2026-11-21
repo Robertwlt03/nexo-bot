@@ -1,2 +1,3 @@
 # markdown-graphics settings: the name on banners and in their alt text.
 name = "nexo-bot"
+icon = "assets/icon.svg"

@@ -20,13 +20,25 @@ import {
     reasonOption,
     targetMember,
     targetUser,
+    tellMember,
+    untold,
 } from "./moderation-options.ts";
 
 const MINUTE = 60_000;
 
-/** A private answer to the moderator; the member is not told. */
+/** A private answer to the moderator, or the deferred one filled in; the member is not told. */
 function answer(interaction: ChatInputCommandInteraction, content: string) {
-    return interaction.reply({ content, flags: MessageFlags.Ephemeral });
+    return interaction.deferred
+        ? interaction.editReply(content)
+        : interaction.reply({ content, flags: MessageFlags.Ephemeral });
+}
+
+/**
+ * Answers "Nexo is thinking" first: Discord waits only three seconds for an answer, and a busy
+ * Discord can take longer to carry out the action.
+ */
+function thinking(interaction: ChatInputCommandInteraction) {
+    return interaction.deferReply({ flags: MessageFlags.Ephemeral });
 }
 
 /** The parts every moderation command shares: name, description, server only, who sees it. */
@@ -66,10 +78,13 @@ export const timeout: Command = {
         if (typeof target === "string") return answer(interaction, target);
         const minutes = interaction.options.getInteger(commandTexts.durationName, true);
         const reason = interaction.options.getString(commandTexts.reasonName);
+        await thinking(interaction);
         await target.timeout(minutes * MINUTE, auditReason(interaction.member, reason));
         const until = new Date(Date.now() + minutes * MINUTE);
         const shown = time(until, TimestampStyles.LongDateShortTime);
-        await answer(interaction, t.timedOut(userMention(target.id), shown));
+        const notice = { action: "timeout", guild: interaction.guild, reason, until } as const;
+        const told = await tellMember(target.user, t, notice);
+        await answer(interaction, t.timedOut(userMention(target.id), shown) + untold(t, told));
         const entry = { action: "timeout", userId: target.id, reason, until } as const;
         return logModeration(interaction, settings, entry);
     },
@@ -93,6 +108,7 @@ export const untimeout: Command = {
             return answer(interaction, t.notTimedOut(userMention(target.id)));
         }
         const reason = interaction.options.getString(commandTexts.reasonName);
+        await thinking(interaction);
         await target.timeout(null, auditReason(interaction.member, reason));
         await answer(interaction, t.untimedOut(userMention(target.id)));
         const entry = { action: "untimeout", userId: target.id, reason } as const;
@@ -111,8 +127,12 @@ export const kick: Command = {
         const target = checkedMember(interaction, "kick", t);
         if (typeof target === "string") return answer(interaction, target);
         const reason = interaction.options.getString(commandTexts.reasonName);
+        await thinking(interaction);
+        // Told first: once out, they may share no server with Nexo, and no message reaches them.
+        const notice = { action: "kick", guild: interaction.guild, reason } as const;
+        const told = await tellMember(target.user, t, notice);
         await target.kick(auditReason(interaction.member, reason));
-        await answer(interaction, t.kicked(userMention(target.id)));
+        await answer(interaction, t.kicked(userMention(target.id)) + untold(t, told));
         const entry = { action: "kick", userId: target.id, reason } as const;
         return logModeration(interaction, settings, entry);
     },
@@ -148,8 +168,11 @@ export const ban: Command = {
         if (problem)
             return answer(interaction, problemText(t, problem, "ban", userMention(user.id)));
         const reason = interaction.options.getString(commandTexts.reasonName);
+        await thinking(interaction);
+        // Told first, as for a kick; someone not on the server is not told.
+        const told = target ? await tellMember(user, t, { action: "ban", guild, reason }) : true;
         await guild.members.ban(user, { reason: auditReason(moderator, reason) });
-        await answer(interaction, t.banned(userMention(user.id)));
+        await answer(interaction, t.banned(userMention(user.id)) + untold(t, told));
         const entry = { action: "ban", userId: user.id, reason } as const;
         return logModeration(interaction, settings, entry);
     },
@@ -168,6 +191,7 @@ export const unban: Command = {
             return answer(interaction, t.problemNoPermission(t.moderationPermissionNames.ban));
         }
         const user = interaction.options.getUser(commandTexts.userName, true);
+        await thinking(interaction);
         // Discord answers "unknown ban" for someone who is not banned; anything else is an error.
         const existing = await guild.bans.fetch(user).catch((error: { code?: unknown }) => {
             if (error.code === RESTJSONErrorCodes.UnknownBan) return null;

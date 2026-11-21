@@ -19,7 +19,7 @@ import {
 } from "discord.js";
 import { CARD, card, facts } from "../card.ts";
 import { type ChannelPermission, missingPermissions, TICKET_PERMISSIONS } from "../channel.ts";
-import { icon } from "../icons.ts";
+import { icon, iconButton } from "../icons.ts";
 import type { Settings } from "../settings.ts";
 import { commandTexts, en, type Texts, texts } from "../texts.ts";
 import type { Command } from "./command.ts";
@@ -29,7 +29,7 @@ export function ticketCard(t: Texts, userId: string, teamId?: string): Container
     const team = teamId ? `\n${facts([[t.ticketTeam, roleMention(teamId)]])}` : "";
     return card(
         `${icon("ticket")}${t.ticketTitle}`,
-        `${userMention(userId)} ${t.ticketHello}${team}`,
+        `${t.ticketHello(userMention(userId))}${team}`,
     ).addActionRowComponents((row) =>
         row.addComponents(
             new ButtonBuilder()
@@ -97,21 +97,32 @@ async function createTicket(
         await open.members.add(user.id);
         return interaction.editReply(t.ticketAlreadyOpen(channelMention(open.id)));
     }
+    // Permissions taken away after the setup: the member hears so, not "something went wrong".
+    if (missingPermissions(channel, TICKET_PERMISSIONS).length > 0) {
+        return interaction.editReply(t.ticketUnavailable);
+    }
     const thread = await channel.threads.create({
         name: interaction.member.displayName,
         type: ChannelType.PrivateThread,
         invitable: false,
         autoArchiveDuration: ThreadAutoArchiveDuration.OneWeek,
     });
+    try {
+        await thread.members.add(user.id);
+        // Mentioning the team's role in a private thread adds its members, as long as the role
+        // has fewer than 100 (a Discord limit).
+        await thread.send({
+            components: [ticketCard(t, user.id, teamId)],
+            flags: CARD,
+            allowedMentions: { users: [user.id], roles: teamId ? [teamId] : [] },
+        });
+    } catch (error) {
+        // A ticket without its card has no close button and would block the member's next one.
+        await thread.delete().catch(() => undefined);
+        throw error;
+    }
+    // Kept only once the card is there, so a failed ticket blocks nothing.
     settings.saveTicket(guildId, user.id, thread.id);
-    await thread.members.add(user.id);
-    // Mentioning the team's role in a private thread adds its members, as long as the role has
-    // fewer than 100 (a Discord limit).
-    await thread.send({
-        components: [ticketCard(t, user.id, teamId)],
-        flags: CARD,
-        allowedMentions: { users: [user.id], roles: teamId ? [teamId] : [] },
-    });
     return interaction.editReply(t.ticketOpened(channelMention(thread.id)));
 }
 
@@ -147,7 +158,7 @@ export const ticket: Command = {
                 ),
         ),
 
-    async run(interaction) {
+    async run(interaction, { settings }) {
         const t = texts(interaction.locale);
         const answer = (content: string) =>
             interaction.reply({ content, flags: MessageFlags.Ephemeral });
@@ -177,17 +188,38 @@ export const ticket: Command = {
         }
         const text =
             interaction.options.getString(commandTexts.greetingMessageName) ?? t.ticketPanelText;
+        const open = new ButtonBuilder()
+            .setCustomId(team ? `ticket:open:${team.id}` : "ticket:open")
+            .setStyle(ButtonStyle.Secondary)
+            .setLabel(t.ticketOpenButton);
         const panel = card(`${icon("ticket")}${t.ticketPanelTitle}`, text).addActionRowComponents(
-            (row) =>
-                row.addComponents(
-                    new ButtonBuilder()
-                        .setCustomId(team ? `ticket:open:${team.id}` : "ticket:open")
-                        .setStyle(ButtonStyle.Primary)
-                        .setLabel(t.ticketOpenButton),
-                ),
+            (row) => row.addComponents(iconButton(open, "ticket")),
         );
-        await channel.send({ components: [panel], flags: CARD });
-        return answer(t.ticketSetUp(channelMention(channel.id)));
+        // Finding and changing the panel can outlast Discord's three seconds.
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+        // Setting up again changes the panel already in that channel instead of adding another.
+        const shownId = settings.ticketPanel(interaction.guildId, channel.id);
+        const shown = shownId && (await channel.messages.fetch(shownId).catch(() => null));
+        if (shown) await shown.edit({ components: [panel] });
+        else {
+            const sent = await channel.send({ components: [panel], flags: CARD });
+            settings.saveTicketPanel(interaction.guildId, channel.id, sent.id);
+        }
+        // Warnings, not refusals: the panel works, but some tickets could go unanswered.
+        const everyone = channel.permissionsFor(interaction.guild.roles.everyone);
+        const warnings = everyone.has(PermissionFlagsBits.SendMessagesInThreads)
+            ? []
+            : [t.ticketWarnEveryone(channelMention(channel.id))];
+        // Discord adds a mentioned role's members to a private thread only below 100.
+        // A newer endpoint; when Discord doesn't answer it, only this warning is left out.
+        const counts = team
+            ? await interaction.guild.roles.fetchMemberCounts().catch(() => undefined)
+            : undefined;
+        if (team && (counts?.get(team.id) ?? 0) >= 100) {
+            warnings.push(t.ticketWarnTeamSize(roleMention(team.id), channelMention(channel.id)));
+        }
+        const setUp = t.ticketSetUp(channelMention(channel.id));
+        return interaction.editReply([setUp, ...warnings].join("\n\n"));
     },
 
     async button(interaction, { settings }, what) {
@@ -202,11 +234,13 @@ export const ticket: Command = {
         // so whoever can click may close it.
         const thread = interaction.channel;
         if (!thread?.isThread()) throw new Error("A ticket's close button outside a thread");
-        // Locked first: if that fails, the ticket stays open as it was.
+        // Locking can outlast Discord's three seconds; locked first, so if that fails, the
+        // ticket stays open as it was.
+        await interaction.deferUpdate();
         await thread.setLocked(true);
         settings.closeTicket(thread.id);
         const shown = interaction.message.components[0]?.toJSON() as APIContainerComponent;
-        await interaction.update({ components: [closedCard(shown, t, interaction.user.id)] });
+        await interaction.editReply({ components: [closedCard(shown, t, interaction.user.id)] });
         return thread.setArchived(true);
     },
 };

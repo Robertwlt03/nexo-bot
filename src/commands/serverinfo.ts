@@ -16,25 +16,25 @@ export const serverinfo: Command = {
         .setDescription(en.commandDescriptions.serverinfo)
         .setContexts(InteractionContextType.Guild),
 
-    async run(interaction) {
+    run(interaction) {
         const t = texts(interaction.locale);
         if (!interaction.inCachedGuild()) {
             return interaction.reply({ content: t.serverOnly, flags: MessageFlags.Ephemeral });
         }
-        // The member count the bot keeps is the one from its start: Discord only reports joins to
-        // bots with the privileged members intent. Asking Discord gives today's count instead.
-        const guild = await interaction.client.guilds.fetch({
-            guild: interaction.guild,
-            withCounts: true,
-            force: true,
-        });
+        // The member count stays current: Nexo hears of every join and leave (GuildMembers).
+        const { guild } = interaction;
         const roles = guild.roles.cache.size - 1; // without @everyone, which every server has
+        // Threads, tickets among them, are not channels of their own.
+        const channels = guild.channels.cache.filter((channel) => !channel.isThread()).size;
         // The counts in one row, each number bold before what it counts.
         const counts = [
-            [guild.approximateMemberCount ?? guild.memberCount, t.members],
-            [guild.channels.cache.size, t.channels],
+            [guild.memberCount, t.members],
+            [channels, t.channels],
             [roles, t.roles],
-            [guild.premiumSubscriptionCount ?? 0, `${t.boosts} (${t.level} ${guild.premiumTier})`],
+            [
+                guild.premiumSubscriptionCount ?? 0,
+                `${t.boosts} (${t.boostTier} ${guild.premiumTier})`,
+            ],
         ]
             .map(([count, label]) => `**${count}** ${label}`)
             .join("  ·  ");

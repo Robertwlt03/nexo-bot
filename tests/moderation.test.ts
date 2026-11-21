@@ -1,5 +1,10 @@
-import { describe, expect, it } from "vitest";
+import type { Guild, User } from "discord.js";
+import { describe, expect, it, vi } from "vitest";
+import { noticeCard, tellMember, untold } from "../src/commands/moderation-options.ts";
 import { type ModerationFacts, moderationProblem } from "../src/moderation.ts";
+import { en } from "../src/texts.ts";
+import { de } from "../src/translations/de.ts";
+import { textOf } from "./text-of.ts";
 
 /** A moderator acting on an ordinary member, with everything allowed. */
 const allowed: ModerationFacts = {
@@ -51,5 +56,30 @@ describe("moderationProblem", () => {
         const belowTarget = { ...allowed, nexoAboveTarget: false };
         expect(moderationProblem("ban", belowTarget)).toBe("above-nexo");
         expect(moderationProblem("warn", belowTarget)).toBeUndefined();
+    });
+});
+
+describe("telling the member", () => {
+    const guild = { name: "Nexo *Club*", iconURL: () => null } as unknown as Guild;
+
+    it("says where, why and how many warnings, without the moderator's name", () => {
+        const notice = { action: "warn", guild, reason: "spam", warnings: 2 } as const;
+        const text = textOf(noticeCard(de, notice));
+        expect(text).toContain(de.dmTitles.warn("Nexo \\*Club\\*"));
+        expect(text).toContain("spam");
+        expect(text).toContain(`${de.dmWarnings.toUpperCase()}\n2`);
+        expect(text).toContain(de.dmNoReply);
+    });
+
+    it("gives true when the message arrived, false when direct messages are closed", async () => {
+        const notice = { action: "kick", guild, reason: null } as const;
+        const open = { send: vi.fn(async () => undefined) } as unknown as User;
+        const closed = {
+            send: vi.fn(async () => Promise.reject({ code: 50007 })),
+        } as unknown as User;
+        expect(await tellMember(open, en, notice)).toBe(true);
+        expect(await tellMember(closed, en, notice)).toBe(false);
+        expect(untold(en, false)).toContain(en.dmNotDelivered);
+        expect(untold(en, true)).toBe("");
     });
 });
