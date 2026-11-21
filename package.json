@@ -22,7 +22,7 @@
   },
   "packageManager": "pnpm@12.21.0",
   "scripts": {
-    "start": "node --env-file-if-exists=.env src/main.ts",
+    "build": "tsc -p tsconfig.build.json",
     "dev": "node --env-file-if-exists=.env --watch src/main.ts",
     "check": "biome check && tsc",
     "format": "biome check --write",

@@ -58,6 +58,12 @@ All notable changes to this project are listed here. The format follows
 - Moderation tells the member by direct message: where, why, until when and how many warnings,
   without the moderator's name. The moderator hears when the message could not be delivered.
 - When Nexo is removed from a server, it deletes everything it kept about it.
+- `make build` makes plain JavaScript in `dist/` for servers; with `make start`, Nexo needs about
+  55 MB of memory instead of about 110 MB.
+- After each picture, Nexo hands its memory back at once: 40 pictures in a row hold about 34 MB
+  instead of 54. The wood texture is scaled to the pictures' size, which saves 3 MB more.
+- A `Makefile` with short commands: `make` lists them, from `make dev` to `make verify`, which
+  runs every check CI runs on the code.
 
 ### Removed
 

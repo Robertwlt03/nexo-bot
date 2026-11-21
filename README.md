@@ -34,7 +34,8 @@ lands.
 
 ## <img src="assets/icons/install.svg" height="33" align="absmiddle" alt="">Install
 
-You need [Node.js 26](https://nodejs.org) and [pnpm](https://pnpm.io).
+You need [Node.js 26](https://nodejs.org), [pnpm](https://pnpm.io) and make, which macOS and Linux
+bring along. Without make, the pnpm scripts of the same name work too, such as `pnpm dev`.
 
 1. **Create the bot.** In the
    [Discord Developer Portal](https://discord.com/developers/applications), choose
@@ -57,12 +58,26 @@ You need [Node.js 26](https://nodejs.org) and [pnpm](https://pnpm.io).
 4. **Start it.**
 
    ```bash
-   pnpm install
-   pnpm dev
+   make setup
+   make dev
    ```
 
-   The console shows `Nexo#1234 is online with 21 commands`. `pnpm dev` restarts the bot whenever
-   a file changes; `pnpm start` runs it once.
+   The console shows `Nexo#1234 is online with 21 commands`. `make dev` restarts the bot whenever
+   a file changes. `make` alone lists every command; most run the pnpm script of the same name.
+5. **Run it on a server.** Build it after every update, then start it:
+
+   ```bash
+   make build
+   ```
+
+   ```bash
+   make start
+   ```
+
+   That way Nexo needs about 55 MB of memory instead of about 110 MB: the JavaScript in `dist/`
+   spares Node its TypeScript translator, two flags keep V8's heap small, a third lets Nexo hand
+   back a picture's memory right after drawing it, and Node runs without pnpm, which would cost a
+   second process of about 18 MB (make itself needs about 2 MB).
 
 ## <img src="assets/icons/use.svg" height="33" align="absmiddle" alt="">Use
 
@@ -72,7 +87,9 @@ is in, which can take Discord a moment.
 
 ## <img src="assets/icons/how.svg" height="33" align="absmiddle" alt="">How it works
 
-- Node.js 26 runs the TypeScript in `src/` directly, so there is no build step.
+- In development, Node.js 26 runs the TypeScript in `src/` directly. For a server, `make build`
+  turns it into plain JavaScript in `dist/` with the TypeScript compiler, which saves Node about
+  20 MB of memory.
 - `src/commands/index.ts` lists every command. When the bot starts, it registers that list with
   Discord and answers each slash command with the matching one.
 - `src/texts.ts` holds every text in English; `src/translations/de.ts` holds the German ones.
@@ -121,9 +138,10 @@ is in, which can take Discord a moment.
 ## <img src="assets/icons/contribute.svg" height="33" align="absmiddle" alt="">Contribute
 
 ```bash
-pnpm check    # Biome and TypeScript
-pnpm test     # Vitest
-pnpm format   # Biome fixes what it can
+make check    # Biome and TypeScript
+make test     # Vitest
+make format   # Biome fixes what it can
+make verify   # all of it and the build, as CI runs it
 ```
 
 CI runs the same checks, plus [check-pipeline](https://github.com/Robertwlt03/check-pipeline) for

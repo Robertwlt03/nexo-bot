@@ -2,16 +2,25 @@
 
 ## Toolchain
 
-- Node.js 26, which runs the TypeScript in `src/` directly (type stripping): imports name the
-  `.ts` file, and only syntax that can be erased is allowed (`erasableSyntaxOnly`).
+- Node.js 26, which runs the TypeScript in `src/` directly in development (type stripping):
+  imports name the `.ts` file, and only syntax that can be erased is allowed (`erasableSyntaxOnly`).
+  A server runs the JavaScript `make build` makes in `dist/` (tsc rewrites the imports to `.js`).
 - discord.js 14, pnpm, Biome for format and lint, Vitest for tests.
 - Lines at most 100 characters (`.editorconfig`, `biome.json`).
 
 ## Commands
 
-- Run the bot: `pnpm dev` (restarts on changes) or `pnpm start`; settings in `.env`
-- All checks: `pnpm check` (Biome and TypeScript) and `pnpm test` (Vitest)
-- Fix formatting: `pnpm format`
+- `make` lists the commands in the `Makefile`; most run the pnpm script of the same name.
+- Run the bot: `make dev` (restarts on changes); settings in `.env`
+- On a server: `make build`, then `make start`, which runs Node without pnpm (a second process
+  costs about 18 MB; the flags live in the `Makefile`). Keep memory in mind:
+  the free hosting plan holds about 100 MB, and Nexo needs about 55 MB idle. The heap is capped
+  at 64 MB (it uses about 24 MB); raise `--max-old-space-size` when a feature needs more, or Node
+  stops with "heap out of memory". After each picture Nexo runs `gc` (exposed by `make start`),
+  since resvg's memory only goes back when V8 collects; measure a change with many pictures.
+- All checks: `make check` (Biome and TypeScript) and `make test` (Vitest); `make verify` adds
+  the build, as CI runs it
+- Fix formatting: `make format`
 - Repository checks, as CI runs them: `check-pipeline` (check-pipeline.toml)
 
 ## Hard rules
@@ -77,7 +86,7 @@
 
 ## Before every commit
 
-Run `pnpm check`, `pnpm test` and `check-pipeline`, and add a line to `CHANGELOG.md` for anything
+Run `make verify` and `check-pipeline`, and add a line to `CHANGELOG.md` for anything
 a member or a server admin notices.
 
 ## Git

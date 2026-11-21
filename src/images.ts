@@ -86,6 +86,10 @@ function png(svg: string): Buffer {
     const rendered = new Resvg(svg, {
         font: { fontFiles: FONTS, loadSystemFonts: false, defaultFontFamily: "Geist" },
     });
+    // resvg's memory goes back only when V8 collects its objects, and an idle Nexo rarely does:
+    // 40 pictures in a row held 54 MB instead of 34. `make start` exposes gc for this.
+    // ponytail: one full GC (a few ms) per picture; collect once per burst if a game draws many.
+    setImmediate(() => globalThis.gc?.());
     return rendered.render().asPng();
 }
 

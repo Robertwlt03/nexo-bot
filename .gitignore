@@ -4,3 +4,5 @@ node_modules/
 .idea/
 # Each server's settings (DATABASE_PATH), created when the bot starts.
 data/
+# The JavaScript `pnpm build` makes from src/, to run on a server.
+dist/

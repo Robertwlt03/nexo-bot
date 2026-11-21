@@ -1,5 +1,5 @@
-# Checks every pull request and main: format, lint, types and tests with pnpm, then the
-# repository checks of check-pipeline (secrets, workflows, links, texts, commit messages).
+# Checks every pull request and main: format, lint, types, tests and the build (make verify),
+# then the repository checks of check-pipeline (secrets, workflows, links, texts, commit messages).
 name: CI
 
 on:
@@ -32,8 +32,7 @@ jobs:
           node-version: 26
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm check
-      - run: pnpm test
+      - run: make verify # pnpm check, pnpm test and the build a server runs
 
   repository:
     name: Repository checks
