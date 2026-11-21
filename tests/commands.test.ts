@@ -1,7 +1,7 @@
 import {
     type APIApplicationCommandOption,
     type ChatInputCommandInteraction,
-    type EmbedBuilder,
+    type ContainerBuilder,
     Locale,
 } from "discord.js";
 import { describe, expect, it } from "vitest";
@@ -47,17 +47,19 @@ describe("commands", () => {
 
     it("are all listed by /help, in the asker's language", async () => {
         const help = commands.find(({ data }) => data.name === "help");
-        const replies: { embeds: EmbedBuilder[] }[] = [];
+        const replies: { components: ContainerBuilder[] }[] = [];
         const interaction = {
             locale: Locale.German,
-            reply: async (answer: { embeds: EmbedBuilder[] }) => replies.push(answer),
+            reply: async (answer: { components: ContainerBuilder[] }) => replies.push(answer),
         } as unknown as ChatInputCommandInteraction;
 
         await help?.run(interaction, { settings: openSettings(":memory:") });
 
-        const listing = replies[0]?.embeds[0]?.data.description ?? "";
+        const listing = JSON.stringify(replies[0]?.components[0]?.toJSON());
         for (const { name, description_localizations } of definitions) {
-            expect(listing).toContain(`/${name}\` ${description_localizations?.de}`);
+            // Before Discord gives the IDs, a command shows as code instead of a clickable mention.
+            expect(listing).toContain(`/${name}`);
+            expect(listing).toContain(`\` ${description_localizations?.de}`);
         }
     });
 });

@@ -7,11 +7,13 @@ import {
     type SlashCommandSubcommandBuilder,
 } from "discord.js";
 import { autoroleProblem } from "../autorole.ts";
-import { card } from "../card.ts";
+import { card, PRIVATE_CARD } from "../card.ts";
+import { icon } from "../icons.ts";
 import { en, texts } from "../texts.ts";
 import { de } from "../translations/de.ts";
 import type { Command } from "./command.ts";
 import { localized } from "./localized.ts";
+import { commandMention } from "./mention.ts";
 
 /** The role option of /autorole add and remove. */
 function withRole(subcommand: SlashCommandSubcommandBuilder): SlashCommandSubcommandBuilder {
@@ -113,12 +115,13 @@ export const autorole: Command = {
                     settings.removeAutorole(guildId, id);
                     return false;
                 });
-                if (ids.length === 0) return answer(t.autoroleNone);
+                if (ids.length === 0) {
+                    return answer(t.autoroleNone(commandMention("autorole", en.autoroleAddName)));
+                }
+                const list = ids.map(roleMention).join("\n");
                 return interaction.reply({
-                    embeds: [
-                        card(t.autoroleListTitle).setDescription(ids.map(roleMention).join("\n")),
-                    ],
-                    flags: MessageFlags.Ephemeral,
+                    components: [card(`${icon("autorole")}${t.autoroleListTitle}`, list)],
+                    flags: PRIVATE_CARD,
                 });
             }
             default:

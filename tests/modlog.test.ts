@@ -1,12 +1,21 @@
 import type { ChatInputCommandInteraction } from "discord.js";
 import { describe, expect, it, vi } from "vitest";
+import { NEXO_AMBER } from "../src/card.ts";
 import { logModeration, modlogCard } from "../src/modlog.ts";
 import { openSettings } from "../src/settings.ts";
 import { en } from "../src/texts.ts";
 import { de } from "../src/translations/de.ts";
 
-const fieldsOf = (card: ReturnType<typeof modlogCard>) =>
-    card.toJSON().fields?.map(({ name, value }) => [name, value]);
+/** Every text a card shows, top to bottom, as one string. */
+function textOf(card: ReturnType<typeof modlogCard>): string {
+    const texts: string[] = [];
+    const walk = (component: object) => {
+        if ("content" in component) texts.push(String(component.content));
+        if ("components" in component) (component.components as object[]).forEach(walk);
+    };
+    walk(card.toJSON());
+    return texts.join("\n");
+}
 
 describe("modlogCard", () => {
     it("names the action, the member with their ID, the moderator and the reason", () => {
@@ -16,12 +25,9 @@ describe("modlogCard", () => {
             moderatorId: "7",
             reason: "spam",
         });
-        expect(card.toJSON().title).toBe("👢 Kick");
-        expect(fieldsOf(card)).toEqual([
-            ["Member", "<@42> · 42"],
-            ["Moderator", "<@7>"],
-            ["Reason", "spam"],
-        ]);
+        expect(textOf(card)).toBe(
+            "## Kick\n-# MEMBER\n<@42> · 42\n-# MODERATOR\n<@7>\n-# REASON\nspam",
+        );
     });
 
     it("adds a timeout's end and a warning's number, and no reason when none was given", () => {
@@ -33,8 +39,7 @@ describe("modlogCard", () => {
             reason: null,
             until,
         });
-        expect(timeout.toJSON().title).toBe("🔇 Timeout");
-        expect(fieldsOf(timeout)?.slice(2)).toEqual([["Bis", "<t:1700000000:f>"]]);
+        expect(textOf(timeout).split("\n").slice(5)).toEqual(["-# BIS", "<t:1700000000:f>"]);
         const unwarn = modlogCard(de, {
             action: "unwarn",
             userId: "42",
@@ -42,7 +47,13 @@ describe("modlogCard", () => {
             reason: null,
             warning: 3,
         });
-        expect(fieldsOf(unwarn)?.slice(2)).toEqual([["Verwarnung", "#3"]]);
+        expect(textOf(unwarn).split("\n").slice(5)).toEqual(["-# VERWARNUNG", "#3"]);
+    });
+    it("keeps Nexo's amber edge for every action; the icon tells them apart", () => {
+        const entry = { userId: "42", moderatorId: "7", reason: null };
+        for (const action of ["ban", "unban"] as const) {
+            expect(modlogCard(en, { ...entry, action }).toJSON().accent_color).toBe(NEXO_AMBER);
+        }
     });
 });
 
@@ -94,7 +105,7 @@ describe("logModeration", () => {
         const gone = moderatorOn([]);
         await logModeration(gone.interaction, settings, entry);
         expect(gone.followUp.mock.calls[0]?.[0].content).toBe(
-            `${en.modlogPrefix} ${en.channelGone("/modlog setup")}`,
+            `${en.modlogPrefix} ${en.channelGone("`/modlog setup`")}`,
         );
 
         settings.saveModlogChannel("server", "log");

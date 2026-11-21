@@ -1,12 +1,18 @@
-import { InteractionContextType, MessageFlags, roleMention, SlashCommandBuilder } from "discord.js";
-import { card } from "../card.ts";
+import {
+    InteractionContextType,
+    MessageFlags,
+    roleMention,
+    SlashCommandBuilder,
+    subtext,
+} from "discord.js";
+import { CARD, card, facts } from "../card.ts";
 import { dateWithAge, firstWithRest } from "../format.ts";
 import { en, texts } from "../texts.ts";
 import { de } from "../translations/de.ts";
 import type { Command } from "./command.ts";
 import { chosenPerson, memberOption } from "./member-option.ts";
 
-const ROLES_SHOWN = 15; // a card field holds 1024 characters; fifteen role mentions stay well below
+const ROLES_SHOWN = 15; // a card holds 4000 characters; fifteen role mentions stay well below
 
 export const userinfo: Command = {
     data: new SlashCommandBuilder()
@@ -29,23 +35,21 @@ export const userinfo: Command = {
                   .sort((a, b) => b.position - a.position)
                   .map((role) => roleMention(role.id))
             : [];
-        return interaction.reply({
-            embeds: [
-                card(member?.displayName ?? user.displayName)
-                    .setThumbnail((member ?? user).displayAvatarURL({ size: 256 }))
-                    .addFields(
-                        { name: t.account, value: `${user.username}${user.bot ? " 🤖" : ""}` },
-                        { name: t.created, value: dateWithAge(user.createdAt) },
-                        {
-                            name: t.joined,
-                            value: member?.joinedAt ? dateWithAge(member.joinedAt) : t.notOnServer,
-                        },
-                        {
-                            name: `${t.roles} (${roles.length})`,
-                            value: roles.length > 0 ? firstWithRest(roles, ROLES_SHOWN) : "–",
-                        },
-                    ),
-            ],
-        });
+        const name = member?.displayName ?? user.displayName;
+        const text = [
+            // The handle under the name, unless the name only capitalizes it.
+            ...(name.toLowerCase() === user.username ? [] : [subtext(`@${user.username}`)]),
+            facts([
+                [t.created, dateWithAge(user.createdAt)],
+                [t.joined, member?.joinedAt ? dateWithAge(member.joinedAt) : t.notOnServer],
+                [
+                    `${t.roles} (${roles.length})`,
+                    roles.length > 0 ? firstWithRest(roles, ROLES_SHOWN) : undefined,
+                ],
+            ]),
+        ].join("\n");
+        const picture = (member ?? user).displayAvatarURL({ size: 256 });
+        const title = user.bot ? `${name} 🤖` : name;
+        return interaction.reply({ components: [card(title, text, { picture })], flags: CARD });
     },
 };

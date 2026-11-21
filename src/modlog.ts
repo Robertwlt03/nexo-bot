@@ -1,20 +1,32 @@
 import {
-    type ChatInputCommandInteraction,
+    type ContainerBuilder,
     channelMention,
-    type EmbedBuilder,
-    type EmbedField,
     MessageFlags,
+    type RepliableInteraction,
     TimestampStyles,
     time,
     userMention,
 } from "discord.js";
-import { card } from "./card.ts";
+import { CARD, card, facts } from "./card.ts";
 import { post } from "./channel.ts";
+import { commandMention } from "./commands/mention.ts";
+import { type IconName, icon } from "./icons.ts";
 import type { Settings } from "./settings.ts";
-import { type Texts, texts } from "./texts.ts";
+import { en, type Texts, texts } from "./texts.ts";
 
 /** Something a moderator did through Nexo. */
 export type ModlogAction = keyof Texts["modlogTitles"];
+
+/** Each action's icon; taking an action back shares one. */
+const ICONS: Record<ModlogAction, IconName> = {
+    warn: "warn",
+    timeout: "timeout",
+    kick: "leave",
+    ban: "ban",
+    unwarn: "undo",
+    untimeout: "undo",
+    unban: "undo",
+};
 
 export type ModlogEntry = {
     action: ModlogAction;
@@ -27,25 +39,19 @@ export type ModlogEntry = {
     warning?: number;
 };
 
-/** The mod log's card. The ID stays readable once the member has left and the mention breaks. */
-export function modlogCard(t: Texts, entry: ModlogEntry): EmbedBuilder {
-    const fields: EmbedField[] = [
-        {
-            name: t.modlogMember,
-            value: `${userMention(entry.userId)} · ${entry.userId}`,
-            inline: true,
-        },
-        { name: t.modlogModerator, value: userMention(entry.moderatorId), inline: true },
-    ];
-    if (entry.until) {
-        const until = time(entry.until, TimestampStyles.LongDateShortTime);
-        fields.push({ name: t.modlogUntil, value: until, inline: true });
-    }
-    if (entry.warning !== undefined) {
-        fields.push({ name: t.modlogWarning, value: `#${entry.warning}`, inline: true });
-    }
-    if (entry.reason) fields.push({ name: t.modlogReason, value: entry.reason, inline: false });
-    return card(t.modlogTitles[entry.action]).addFields(fields).setTimestamp();
+/**
+ * The mod log's card. The ID stays readable once the member has left and the mention breaks.
+ * Discord shows when it was posted, so the card doesn't.
+ */
+export function modlogCard(t: Texts, entry: ModlogEntry): ContainerBuilder {
+    const text = facts([
+        [t.modlogMember, `${userMention(entry.userId)} · ${entry.userId}`],
+        [t.modlogModerator, userMention(entry.moderatorId)],
+        [t.modlogUntil, entry.until && time(entry.until, TimestampStyles.LongDateShortTime)],
+        [t.modlogWarning, entry.warning === undefined ? undefined : `#${entry.warning}`],
+        [t.modlogReason, entry.reason ?? undefined],
+    ]);
+    return card(`${icon(ICONS[entry.action])}${t.modlogTitles[entry.action]}`, text);
 }
 
 /**
@@ -54,26 +60,27 @@ export function modlogCard(t: Texts, entry: ModlogEntry): EmbedBuilder {
  * post fails, the moderator gets the reason as a private follow-up.
  */
 export async function logModeration(
-    interaction: ChatInputCommandInteraction<"cached">,
+    interaction: RepliableInteraction<"cached">,
     settings: Settings,
     entry: Omit<ModlogEntry, "moderatorId">,
 ): Promise<void> {
     const channelId = settings.modlogChannel(interaction.guildId);
     if (!channelId) return;
     const t = texts(interaction.locale);
-    const embed = modlogCard(t, { ...entry, moderatorId: interaction.user.id });
-    const result = await post(interaction.guild, channelId, { embeds: [embed] }).catch(
-        (error: unknown) => {
-            console.error(`Could not post in the mod log of ${interaction.guild.name}:`, error);
-            return "failed" as const;
-        },
-    );
+    const logged = modlogCard(t, { ...entry, moderatorId: interaction.user.id });
+    const result = await post(interaction.guild, channelId, {
+        components: [logged],
+        flags: CARD,
+    }).catch((error: unknown) => {
+        console.error(`Could not post in the mod log of ${interaction.guild.name}:`, error);
+        return "failed" as const;
+    });
     if (result === "sent") return;
     const problem =
         result === "failed"
             ? t.error
             : result === "no-channel"
-              ? t.channelGone(`/modlog ${t.setupName}`)
+              ? t.channelGone(commandMention("modlog", en.setupName))
               : t.cannotPost(
                     channelMention(channelId),
                     result.map((permission) => t.permissionNames[permission]).join(", "),

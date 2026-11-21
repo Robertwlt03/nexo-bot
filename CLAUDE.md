@@ -31,6 +31,31 @@
   person, as Discord's own settings would: `moderationProblem` for moderation, `autoroleProblem`
   for automatic roles. Otherwise anyone could use Nexo to reach above their own rank.
 
+## Message design
+
+- Nexo Mono: Nexo's amber (`NEXO_AMBER`) is the only color, on Discord's own grays. Every card
+  has the amber edge; nothing gets its own color, and no emoji colors a message.
+- Every card is a Components V2 container (`MessageFlags.IsComponentsV2`), built in
+  `src/card.ts`: a heading, then the facts as a small gray uppercase label above each value
+  (`facts`), then subtext (`-#`) for what matters least. No embeds: they can't hold buttons, and
+  mentions in them never notify.
+- Icons are Heroicons (outline) in amber, uploaded as the app's own emojis (`src/icons.ts`) and
+  put in front of a heading with `icon()`. No Unicode emoji in what Nexo writes.
+- A picture Nexo draws (`src/images.ts`, rendered with resvg in the Geist font from
+  `assets/fonts`) shows data, never decoration: the member's picture, names, numbers. It holds no
+  words, so it suits every language, and the text below doesn't repeat what it shows.
+- Something Nexo can do right away is a button on the message (`customId` = `command:what`,
+  handled by the command's `button`). A link is a link button, never a markdown link. A hint to a
+  command that needs input is a clickable command mention (`commandMention`), never `/command` in
+  code format.
+- Each piece of information appears once per message: no mention above a card that mentions the
+  same person, no heading that repeats the text below it, no footer that repeats a line of a list,
+  no timestamp Discord shows anyway.
+- Discord shows text only left-aligned; structure comes from headings, labels, dividers and a
+  picture beside the text.
+- Mentions never notify unless the message is meant to (the client's `allowedMentions` is
+  `{ parse: [] }`); a message that should notify names exactly whom.
+
 ## Where things go
 
 - Entry point: `src/main.ts`; settings: `src/config.ts`
@@ -39,8 +64,9 @@
 - Each server's settings: `src/settings.ts` (SQLite); welcome and goodbye: `src/greeting.ts`;
   automatic roles: `src/autorole.ts`; moderation checks: `src/moderation.ts`; mod log:
   `src/modlog.ts`; posting in a server's channel: `src/channel.ts`; level math:
-  `src/leveling.ts`
-- Tests: `tests/`; README graphics: `assets/`
+  `src/leveling.ts`; icons: `src/icons.ts`; Nexo's drawn pictures: `src/images.ts`
+- Tests: `tests/`; README graphics: `assets/`; fonts for Nexo's pictures: `assets/fonts/`
+  (Geist, SIL Open Font License in `OFL.txt`)
 
 ## Before every commit
 

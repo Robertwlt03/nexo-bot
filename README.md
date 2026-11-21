@@ -19,7 +19,7 @@ in the language of each member's Discord.
 | `/goodbye`     | Says goodbye in a channel when someone leaves: `setup`, `test`, `off`         |
 | `/autorole`    | Gives new members roles: `add`, `remove`, `list`; for admins                  |
 | `/warn`        | Warns a member with a reason; Nexo keeps the warning                          |
-| `/warnings`    | Shows a member's warnings, numbered; `/unwarn` removes one                    |
+| `/warnings`    | Shows a member's warnings, each with a button that removes it                 |
 | `/timeout`     | Mutes a member for 5 minutes up to a week; `/untimeout` ends it               |
 | `/kick`        | Removes a member from the server; they can join again                         |
 | `/ban`         | Bans someone, also before they join; `/unban` lifts it                        |
@@ -72,6 +72,16 @@ is in, which can take Discord a moment.
   Each answer picks the language of the member's Discord.
 - The bot asks Discord for the server list (`Guilds`) and, for welcome, goodbye and automatic
   roles, for members joining and leaving (`GuildMembers`, the privileged _Server Members Intent_).
+- Every card is built in `src/card.ts` with Discord's newer components, in one design: Nexo's
+  amber is the only color, icons are [Heroicons](https://heroicons.com) uploaded as the app's own
+  emojis (`src/icons.ts`), and facts show as small gray labels above their values. What Nexo
+  can do right away is a button on the card, and a hint to a command is a mention that puts the
+  command into the message box. Mentions only notify where a message is meant to: the welcome
+  with `ping` on, and the level-up.
+- The welcome, the goodbye and `/rank` show a picture Nexo draws of the member
+  (`src/images.ts`): an SVG rendered to PNG by [resvg](https://github.com/thx/resvg-js) in the
+  [Geist](https://vercel.com/font) font, which `assets/fonts/` holds under the SIL Open Font
+  License. It shows names and numbers only, so it suits every language.
 - `/welcome` and `/goodbye` are one command built twice (`src/commands/greeting.ts`); both post
   the same card (`src/greeting.ts`).
 - Members earn 15 to 25 XP for a message, at most every 20 seconds; level _L_ needs

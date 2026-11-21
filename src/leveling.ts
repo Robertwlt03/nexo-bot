@@ -54,9 +54,3 @@ export function xpCooldowns(limit = 10_000) {
         },
     };
 }
-
-/** A bar of ten blocks for how far into the next level someone is. */
-export function progressBar(xp: number, needed: number): string {
-    const filled = Math.min(10, Math.floor((xp / needed) * 10));
-    return "▰".repeat(filled) + "▱".repeat(10 - filled);
-}

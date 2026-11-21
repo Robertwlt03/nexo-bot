@@ -1,6 +1,10 @@
 import {
+    ActionRowBuilder,
+    ButtonBuilder,
+    ButtonStyle,
     ChannelType,
     channelMention,
+    type GuildMember,
     InteractionContextType,
     MessageFlags,
     PermissionFlagsBits,
@@ -8,11 +12,32 @@ import {
 } from "discord.js";
 import { missingPermissions } from "../channel.ts";
 import { sendGreeting } from "../greeting.ts";
-import type { GreetingKind } from "../settings.ts";
-import { en, texts } from "../texts.ts";
+import type { GreetingKind, Settings } from "../settings.ts";
+import { en, type Texts, texts } from "../texts.ts";
 import { de } from "../translations/de.ts";
 import type { Command } from "./command.ts";
 import { localized } from "./localized.ts";
+import { commandMention } from "./mention.ts";
+
+/** Sends a greeting for the member who asks, to try it, and says how that went. */
+async function tryGreeting(
+    kind: GreetingKind,
+    member: GuildMember,
+    settings: Settings,
+    t: Texts,
+): Promise<string> {
+    const setup = commandMention(kind, en.setupName);
+    const saved = settings.greeting(kind, member.guild.id);
+    if (!saved) return t.greetingNotSetUp(setup);
+    const result = await sendGreeting(kind, member, saved);
+    const channel = channelMention(saved.channelId);
+    if (result === "no-channel") return t.channelGone(setup);
+    if (Array.isArray(result)) {
+        const names = result.map((permission) => t.permissionNames[permission]);
+        return t.cannotPost(channel, names.join(", "));
+    }
+    return t.greetingTestSent(channel);
+}
 
 /** /welcome or /goodbye: set up, test and turn off one of a server's greetings. */
 export function greetingCommand(kind: GreetingKind): Command {
@@ -82,7 +107,6 @@ export function greetingCommand(kind: GreetingKind): Command {
                 interaction.reply({ content, flags: MessageFlags.Ephemeral });
             if (!interaction.inCachedGuild()) return answer(t.serverOnly);
             const guildId = interaction.guildId;
-            const setupCommand = `/${kind} ${t.setupName}`;
 
             switch (interaction.options.getSubcommand()) {
                 case en.setupName: {
@@ -105,29 +129,33 @@ export function greetingCommand(kind: GreetingKind): Command {
                             saved?.ping ??
                             false,
                     });
-                    const test = `/${kind} ${t.greetingTestName}`;
-                    return answer(
-                        `${t[kind].saved(channelMention(channel.id))} ${t.greetingTryIt(test)}`,
-                    );
+                    const test = new ButtonBuilder()
+                        .setCustomId(`${kind}:test`)
+                        .setStyle(ButtonStyle.Primary)
+                        .setLabel(t.testButton);
+                    return interaction.reply({
+                        content: t[kind].saved(channelMention(channel.id)),
+                        components: [new ActionRowBuilder<ButtonBuilder>().addComponents(test)],
+                        flags: MessageFlags.Ephemeral,
+                    });
                 }
-                case en.greetingTestName: {
-                    const saved = settings.greeting(kind, guildId);
-                    if (!saved) return answer(t.greetingNotSetUp(setupCommand));
-                    const result = await sendGreeting(interaction.member, saved);
-                    const channel = channelMention(saved.channelId);
-                    if (result === "no-channel") return answer(t.channelGone(setupCommand));
-                    if (Array.isArray(result)) {
-                        const names = result.map((permission) => t.permissionNames[permission]);
-                        return answer(t.cannotPost(channel, names.join(", ")));
-                    }
-                    return answer(t.greetingTestSent(channel));
-                }
+                case en.greetingTestName:
+                    return answer(await tryGreeting(kind, interaction.member, settings, t));
                 case en.offName:
                     settings.removeGreeting(kind, guildId);
                     return answer(t[kind].off);
                 default:
                     return answer(t.unknownCommand);
             }
+        },
+        // The test button under the setup's answer, which only the admin who set it up sees.
+        async button(interaction, { settings }) {
+            const t = texts(interaction.locale);
+            if (!interaction.inCachedGuild()) {
+                return interaction.reply({ content: t.serverOnly, flags: MessageFlags.Ephemeral });
+            }
+            const content = await tryGreeting(kind, interaction.member, settings, t);
+            return interaction.reply({ content, flags: MessageFlags.Ephemeral });
         },
     };
 }

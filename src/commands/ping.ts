@@ -1,5 +1,6 @@
 import { SlashCommandBuilder } from "discord.js";
-import { card } from "../card.ts";
+import { CARD, card, facts } from "../card.ts";
+import { icon } from "../icons.ts";
 import { en, texts } from "../texts.ts";
 import { de } from "../translations/de.ts";
 import type { Command } from "./command.ts";
@@ -20,13 +21,13 @@ export const ping: Command = {
         const thinking = await interaction.fetchReply();
         const roundTrip = thinking.createdTimestamp - interaction.createdTimestamp;
         const gateway = interaction.client.ws.ping; // -1 until the first heartbeat
+        const shown = facts([
+            [t.roundTrip, `${roundTrip} ms`],
+            ["Gateway", gateway < 0 ? undefined : `${gateway} ms`],
+        ]);
         return interaction.editReply({
-            embeds: [
-                card("🏓 Pong!").addFields(
-                    { name: t.roundTrip, value: `${roundTrip} ms`, inline: true },
-                    { name: "Gateway", value: gateway < 0 ? "–" : `${gateway} ms`, inline: true },
-                ),
-            ],
+            components: [card(`${icon("ping")}Pong`, shown)],
+            flags: CARD,
         });
     },
 };

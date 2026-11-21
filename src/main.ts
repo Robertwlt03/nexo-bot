@@ -8,11 +8,15 @@ import {
     Options,
     type PartialGuildMember,
     Partials,
+    userMention,
 } from "discord.js";
 import { giveAutoroles } from "./autorole.ts";
+import { CARD, card } from "./card.ts";
 import { commands } from "./commands/index.ts";
+import { rememberCommandIds } from "./commands/mention.ts";
 import { readConfig } from "./config.ts";
 import { sendGreeting } from "./greeting.ts";
+import { icon, syncIcons } from "./icons.ts";
 import { reachedLevel, rollXp, xpCooldowns } from "./leveling.ts";
 import { type GreetingKind, openSettings } from "./settings.ts";
 import { texts } from "./texts.ts";
@@ -32,15 +36,22 @@ const client = new Client({
     partials: [Partials.GuildMember],
     // Discord.js would keep 200 messages per channel; Nexo never reads them, it only counts XP.
     makeCache: Options.cacheWithLimits({ ...Options.DefaultMakeCacheSettings, MessageManager: 0 }),
+    // Cards mention people and roles to name them; only a message meant to notify says whom.
+    allowedMentions: { parse: [] },
 });
 
 client.once(Events.ClientReady, async (ready) => {
+    // Without its icons Nexo still works: icon() then gives nothing.
+    syncIcons(ready.application).catch((error: unknown) =>
+        console.error("Could not upload Nexo's icons as app emojis:", error),
+    );
     const definitions = commands.map((command) => command.data.toJSON());
     const where = config.guildId ? `test server ${config.guildId}` : "every server";
     try {
-        await (config.guildId
+        const registered = await (config.guildId
             ? ready.application.commands.set(definitions, config.guildId)
             : ready.application.commands.set(definitions));
+        rememberCommandIds(registered.values());
         console.log(`${ready.user.tag} is online with ${definitions.length} commands in ${where}`);
     } catch (error) {
         console.error(
@@ -53,19 +64,28 @@ client.once(Events.ClientReady, async (ready) => {
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
-    if (!interaction.isChatInputCommand()) return;
-    const command = commands.find(({ data }) => data.name === interaction.commandName);
+    if (!interaction.isChatInputCommand() && !interaction.isButton()) return;
+    const [name, what = ""] = interaction.isButton()
+        ? interaction.customId.split(":", 2)
+        : [interaction.commandName];
+    const command = commands.find(({ data }) => data.name === name);
     try {
-        // A command Discord still lists from an older version of the bot gets an answer,
-        // not silence.
-        await (command
-            ? command.run(interaction, { settings })
-            : interaction.reply({
-                  content: texts(interaction.locale).unknownCommand,
-                  flags: MessageFlags.Ephemeral,
-              }));
+        // A command or button from an older version of the bot gets an answer, not silence.
+        if (interaction.isButton() && command?.button) {
+            await command.button(interaction, { settings }, what);
+        } else if (interaction.isChatInputCommand() && command) {
+            await command.run(interaction, { settings });
+        } else {
+            await interaction.reply({
+                content: texts(interaction.locale).unknownCommand,
+                flags: MessageFlags.Ephemeral,
+            });
+        }
     } catch (error) {
-        console.error(`/${interaction.commandName} failed:`, error);
+        console.error(
+            `${interaction.isButton() ? interaction.customId : `/${name}`} failed:`,
+            error,
+        );
         const reply: InteractionReplyOptions = {
             content: texts(interaction.locale).error,
             flags: MessageFlags.Ephemeral,
@@ -83,7 +103,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 async function greet(kind: GreetingKind, member: GuildMember | PartialGuildMember): Promise<void> {
     const greeting = settings.greeting(kind, member.guild.id);
     if (!greeting) return;
-    const result = await sendGreeting(member, greeting).catch((error: unknown) => error);
+    const result = await sendGreeting(kind, member, greeting).catch((error: unknown) => error);
     if (result !== "sent") {
         console.error(
             `Could not post the ${kind} for ${member.user.tag} on ${member.guild.name}:`,
@@ -113,9 +133,16 @@ client.on(Events.MessageCreate, async (message) => {
         const total = settings.addXp(message.guildId, message.author.id, earned);
         const level = reachedLevel(total, earned);
         if (level === undefined) return;
-        // "Level" reads the same in German and English, so the announcement needs no language.
+        // "Level" reads the same in German and English, so the card needs no language. It
+        // mentions the member to notify them.
+        const picture = message.member?.displayAvatarURL({ size: 256 });
         await message.channel.send({
-            content: `🎉 ${message.author} → **Level ${level}**`,
+            components: [
+                card(`${icon("levelup")}Level ${level}`, userMention(message.author.id), {
+                    picture,
+                }),
+            ],
+            flags: CARD,
             allowedMentions: { users: [message.author.id] },
         });
     } catch (error) {

@@ -1,13 +1,20 @@
-import { InteractionContextType, MessageFlags, SlashCommandBuilder, userMention } from "discord.js";
-import { card } from "../card.ts";
-import { levelFor, progressBar } from "../leveling.ts";
+import {
+    InteractionContextType,
+    MessageFlags,
+    SlashCommandBuilder,
+    subtext,
+    userMention,
+} from "discord.js";
+import { CARD, card, drawn } from "../card.ts";
+import { icon } from "../icons.ts";
+import { avatarData, rankImage } from "../images.ts";
+import { levelFor } from "../leveling.ts";
 import { en, texts } from "../texts.ts";
 import { de } from "../translations/de.ts";
 import type { Command } from "./command.ts";
 import { chosenPerson, memberOption } from "./member-option.ts";
 
 const LEADERBOARD_SIZE = 10;
-const MEDALS = ["🥇", "🥈", "🥉"];
 
 export const rank: Command = {
     data: new SlashCommandBuilder()
@@ -17,32 +24,32 @@ export const rank: Command = {
         .setContexts(InteractionContextType.Guild)
         .addUserOption(memberOption),
 
-    run(interaction, { settings }) {
+    async run(interaction, { settings }) {
         const t = texts(interaction.locale);
         if (!interaction.inCachedGuild()) {
             return interaction.reply({ content: t.serverOnly, flags: MessageFlags.Ephemeral });
         }
+        // Fetching the member's picture and drawing can take longer than Discord's three seconds.
+        await interaction.deferReply();
         const { user, member } = chosenPerson(interaction);
-        const total = settings.totalXp(interaction.guildId, user.id);
-        const { level, xp, needed } = levelFor(total);
-        return interaction.reply({
-            embeds: [
-                card(member?.displayName ?? user.displayName)
-                    .setThumbnail((member ?? user).displayAvatarURL({ size: 256 }))
-                    .addFields(
-                        { name: t.levelName, value: String(level), inline: true },
-                        {
-                            name: t.rankPlace,
-                            value: `#${settings.rank(interaction.guildId, user.id)}`,
-                            inline: true,
-                        },
-                        { name: t.totalXp, value: String(total), inline: true },
-                        {
-                            name: t.nextLevel,
-                            value: `${progressBar(xp, needed)} ${xp} / ${needed} XP`,
-                        },
-                    ),
-            ],
+        const totalXp = settings.totalXp(interaction.guildId, user.id);
+        const person = member ?? user;
+        const picture = drawn(
+            "rank.png",
+            rankImage({
+                avatar: await avatarData(
+                    person.displayAvatarURL({ extension: "png", size: 256, forceStatic: true }),
+                ),
+                name: person.displayName,
+                place: settings.rank(interaction.guildId, user.id),
+                totalXp,
+                ...levelFor(totalXp),
+            }),
+        );
+        return interaction.editReply({
+            components: [card(null, undefined, { top: picture.url })],
+            files: [picture.file],
+            flags: CARD,
         });
     },
 };
@@ -59,7 +66,7 @@ export const leaderboard: Command = {
         if (!interaction.inCachedGuild()) {
             return interaction.reply({ content: t.serverOnly, flags: MessageFlags.Ephemeral });
         }
-        const { guild, guildId, user } = interaction;
+        const { guildId, user } = interaction;
         const top = settings.leaderboard(guildId, LEADERBOARD_SIZE);
         if (top.length === 0) {
             return interaction.reply({
@@ -70,16 +77,16 @@ export const leaderboard: Command = {
         const lines = top.map(({ userId, totalXp }) => {
             // Members with the same XP share a place, as /rank counts it: one plus those above.
             const place = 1 + top.filter((other) => other.totalXp > totalXp).length;
-            const marker = MEDALS[place - 1] ?? `**${place}.**`;
             const { level } = levelFor(totalXp);
-            return `${marker} ${userMention(userId)} · ${t.levelName} ${level} · ${totalXp} XP`;
+            const number = String(place).padStart(2, "0");
+            const stats = `${t.levelName} ${level} · ${totalXp} XP`;
+            return `**${number}**  ${userMention(userId)}  ·  ${stats}`;
         });
-        return interaction.reply({
-            embeds: [
-                card(t.leaderboardTitle(guild.name))
-                    .setDescription(lines.join("\n"))
-                    .setFooter({ text: t.leaderboardYou(settings.rank(guildId, user.id)) }),
-            ],
-        });
+        // The asker's own place only when the list doesn't show them already.
+        if (!top.some(({ userId }) => userId === user.id)) {
+            lines.push(subtext(t.leaderboardYou(settings.rank(guildId, user.id))));
+        }
+        const title = `${icon("leaderboard")}${t.leaderboardTitle}`;
+        return interaction.reply({ components: [card(title, lines.join("\n"))], flags: CARD });
     },
 };

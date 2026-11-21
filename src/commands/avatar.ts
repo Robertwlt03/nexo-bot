@@ -1,5 +1,11 @@
-import { InteractionContextType, MessageFlags, SlashCommandBuilder } from "discord.js";
-import { card } from "../card.ts";
+import {
+    ButtonBuilder,
+    ButtonStyle,
+    InteractionContextType,
+    MessageFlags,
+    SlashCommandBuilder,
+} from "discord.js";
+import { CARD, card } from "../card.ts";
 import { en, texts } from "../texts.ts";
 import { de } from "../translations/de.ts";
 import type { Command } from "./command.ts";
@@ -21,18 +27,24 @@ export const avatar: Command = {
             return interaction.reply({ content: t.serverOnly, flags: MessageFlags.Ephemeral });
         }
         const { user, member } = chosenPerson(interaction);
-        // A member can have a picture just for this server: that one is shown,
-        // and the account's own picture is linked beside it.
+        // A member can have a picture just for this server: that one is shown, and a button
+        // opens the account's own picture. A click on the picture opens it in full size.
         const shown = (member ?? user).displayAvatarURL({ size: SIZE });
         const account = user.displayAvatarURL({ size: SIZE });
-        const links = [`[${t.fullSize}](${shown})`];
-        if (account !== shown) links.push(`[${t.accountPicture}](${account})`);
-        return interaction.reply({
-            embeds: [
-                card(t.avatarTitle(member?.displayName ?? user.displayName))
-                    .setDescription(links.join(" · "))
-                    .setImage(shown),
-            ],
-        });
+        const name = member?.displayName ?? user.displayName;
+        const container = card(t.avatarTitle(name)).addMediaGalleryComponents((gallery) =>
+            gallery.addItems((item) => item.setURL(shown).setDescription(t.avatarTitle(name))),
+        );
+        if (account !== shown) {
+            container.addActionRowComponents((row) =>
+                row.addComponents(
+                    new ButtonBuilder()
+                        .setStyle(ButtonStyle.Link)
+                        .setLabel(t.accountPicture)
+                        .setURL(account),
+                ),
+            );
+        }
+        return interaction.reply({ components: [container], flags: CARD });
     },
 };

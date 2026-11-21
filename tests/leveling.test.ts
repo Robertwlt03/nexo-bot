@@ -1,12 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-    levelFor,
-    progressBar,
-    reachedLevel,
-    rollXp,
-    xpCooldowns,
-    xpForNextLevel,
-} from "../src/leveling.ts";
+import { levelFor, reachedLevel, rollXp, xpCooldowns, xpForNextLevel } from "../src/leveling.ts";
 
 describe("levelFor", () => {
     it("reaches each level exactly at its threshold, not one XP before", () => {
@@ -27,14 +20,6 @@ describe("rollXp", () => {
         expect(rollXp(() => 0)).toBe(15);
         expect(rollXp(() => 0.5)).toBe(20);
         expect(rollXp(() => 0.9999)).toBe(25);
-    });
-});
-
-describe("progressBar", () => {
-    it("fills one block per tenth, never more than ten", () => {
-        expect(progressBar(0, 100)).toBe("▱▱▱▱▱▱▱▱▱▱");
-        expect(progressBar(55, 100)).toBe("▰▰▰▰▰▱▱▱▱▱");
-        expect(progressBar(100, 100)).toBe("▰▰▰▰▰▰▰▰▰▰");
     });
 });
 

@@ -30,4 +30,14 @@ All notable changes to this project are listed here. The format follows
 
 ### Changed
 
+- Every card uses Discord's newer components (Components V2) instead of embeds: a heading, the
+  facts, then small print, and nothing twice. The welcome mentions the new member once, inside
+  the card, which notifies them when `ping` is on. `/welcome setup` answers with a test button,
+  `/warnings` has a remove button on each warning, `/help` and every hint to a command can be
+  clicked, and `/avatar` links the account picture with a button.
+- One design, Nexo Mono: Nexo's amber is the only color, icons are Heroicons uploaded as the
+  app's own emojis, and facts show as small gray labels above their values. The welcome and the
+  goodbye show a picture Nexo draws of the member (their picture in an amber ring, their name,
+  the server and, for a welcome, their member number), and `/rank` draws a ring that fills
+  toward the next level. `/help` comes in sections, and level-ups are a card.
 - `/ping` shows "Nexo is thinking…" first, so its answer no longer counts as edited.
