@@ -168,11 +168,14 @@ export const de: Texts = {
         kick: "Mitglieder kicken, annehmen und ablehnen",
         ban: "Mitglieder bannen",
     },
-    modlogDescription: "Protokolliert in einem Kanal, was Moderatoren über Nexo tun",
+    modlogDescription: "Protokolliert in einem Kanal, was Moderatoren über Nexo oder Discord tun",
     modlogSetupDescription: "Legt den Kanal für das Mod-Log fest",
     modlogChannelDescription: "Wo Nexo Verwarnungen, Timeouts, Kicks und Banns protokolliert",
     modlogOffDescription: "Schaltet das Mod-Log aus",
-    modlogSaved: (channel: string) => `Was Moderatoren über Nexo tun, steht jetzt in ${channel}.`,
+    modlogSaved: (channel: string) => `Die Moderation auf diesem Server steht jetzt in ${channel}.`,
+    modlogNoAuditLog:
+        "Kicks, Banns und Timeouts direkt in Discord erscheinen dort, sobald Nexo das Audit-Log " +
+        "einsehen darf; bis dahin nur Nexos Befehle.",
     modlogOff: "Das Mod-Log ist aus.",
     modlogPublic: "Hinweis: Jedes Mitglied kann diesen Kanal lesen, samt Gründen.",
     modlogPrefix: "Mod-Log:",

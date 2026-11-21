@@ -49,7 +49,7 @@ export const modlog: Command = {
         if (!interaction.inCachedGuild()) return answer(t.serverOnly);
 
         if (interaction.options.getSubcommand() === en.offName) {
-            settings.removeModlogChannel(interaction.guildId);
+            settings.removeModlog(interaction.guildId);
             return answer(t.modlogOff);
         }
         const channel = interaction.options.getChannel(en.channelName, true);
@@ -58,10 +58,17 @@ export const modlog: Command = {
             const names = missing.map((permission) => t.permissionNames[permission]).join(", ");
             return answer(t.cannotPost(channelMention(channel.id), names));
         }
-        settings.saveModlogChannel(interaction.guildId, channel.id);
+        settings.saveModlog(interaction.guildId, channel.id, interaction.locale);
         const everyone = interaction.guild.roles.everyone;
         const isPublic = channel.permissionsFor(everyone).has(PermissionFlagsBits.ViewChannel);
-        const saved = t.modlogSaved(channelMention(channel.id));
-        return answer(isPublic ? `${saved} ${t.modlogPublic}` : saved);
+        const seesAuditLog = interaction.guild.members.me?.permissions.has(
+            PermissionFlagsBits.ViewAuditLog,
+        );
+        const notes = [
+            t.modlogSaved(channelMention(channel.id)),
+            ...(seesAuditLog ? [] : [t.modlogNoAuditLog]),
+            ...(isPublic ? [t.modlogPublic] : []),
+        ];
+        return answer(notes.join(" "));
     },
 };

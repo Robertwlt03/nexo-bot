@@ -1,6 +1,8 @@
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { DatabaseSync } from "node:sqlite";
+import { Locale } from "discord.js";
 import { describe, expect, it } from "vitest";
 import { openSettings } from "../src/settings.ts";
 
@@ -90,16 +92,31 @@ describe("warnings", () => {
 });
 
 describe("mod log", () => {
-    it("keeps one channel per server until it is turned off", () => {
+    it("keeps one channel and language per server until it is turned off", () => {
         const settings = openSettings(":memory:");
-        expect(settings.modlogChannel("server")).toBeUndefined();
-        settings.saveModlogChannel("server", "a");
-        settings.saveModlogChannel("server", "b");
-        settings.saveModlogChannel("other", "c");
-        expect(settings.modlogChannel("server")).toBe("b");
-        settings.removeModlogChannel("server");
-        expect(settings.modlogChannel("server")).toBeUndefined();
-        expect(settings.modlogChannel("other")).toBe("c");
+        expect(settings.modlog("server")).toBeUndefined();
+        settings.saveModlog("server", "a", Locale.German);
+        settings.saveModlog("server", "b", Locale.EnglishUS);
+        settings.saveModlog("other", "c", Locale.German);
+        expect(settings.modlog("server")).toEqual({ channelId: "b", locale: Locale.EnglishUS });
+        settings.removeModlog("server");
+        expect(settings.modlog("server")).toBeUndefined();
+        expect(settings.modlog("other")?.channelId).toBe("c");
+    });
+
+    it("gives a mod log from before its language English", () => {
+        const folder = mkdtempSync(join(tmpdir(), "nexo-"));
+        try {
+            const path = join(folder, "nexo.sqlite");
+            const old = new DatabaseSync(path);
+            old.exec("CREATE TABLE modlog (guild_id TEXT PRIMARY KEY, channel_id TEXT NOT NULL)");
+            old.exec("INSERT INTO modlog VALUES ('server', 'log')");
+            old.close();
+            const settings = openSettings(path);
+            expect(settings.modlog("server")).toEqual({ channelId: "log", locale: "en-US" });
+        } finally {
+            rmSync(folder, { recursive: true, force: true });
+        }
     });
 });
 

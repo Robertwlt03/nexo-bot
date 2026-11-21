@@ -23,7 +23,7 @@ in the language of each member's Discord.
 | `/timeout`     | Mutes a member for 5 minutes up to a week; `/untimeout` ends it               |
 | `/kick`        | Removes a member from the server; they can join again                         |
 | `/ban`         | Bans someone, also before they join; `/unban` lifts it                        |
-| `/modlog`      | Logs every moderation command in a channel: `setup`, `off`; for admins        |
+| `/modlog`      | Logs moderation, Nexo's and Discord's own: `setup`, `off`; for admins         |
 | `/ticket`      | Posts a button that opens a private ticket thread with the team; for admins   |
 | `/rank`        | Shows a member's level, rank and XP, or yours                                 |
 | `/leaderboard` | Shows the ten members with the most XP                                        |
@@ -45,7 +45,8 @@ You need [Node.js 26](https://nodejs.org) and [pnpm](https://pnpm.io).
    _Advanced_, right-click your server, choose _Copy Server ID_ and paste it after `GUILD_ID=`.
 3. **Invite it.** Under _OAuth2_, open the _URL Generator_, tick the scopes `bot` and
    `applications.commands` and the permissions _Send Messages_, _Embed Links_, _Manage Roles_ (for
-   automatic roles), _Timeout Members_, _Kick Members_ and _Ban Members_ (for moderation), and
+   automatic roles), _Timeout Members_, _Kick Members_ and _Ban Members_ (for moderation), _View
+   Audit Log_ (for the mod log), and
    _Create Private Threads_, _Send Messages in Threads_ and _Manage Threads and Posts_ (for
    tickets), open the URL and pick your server. Nexo can only give roles below its own highest
    role: in the server settings under _Roles_, drag Nexo's role above them.
@@ -74,6 +75,8 @@ is in, which can take Discord a moment.
   Each answer picks the language of the member's Discord.
 - The bot asks Discord for the server list (`Guilds`) and, for welcome, goodbye and automatic
   roles, for members joining and leaving (`GuildMembers`, the privileged _Server Members Intent_).
+  For the mod log it gets new audit log entries (`GuildModeration`), so kicks, bans and timeouts
+  made in Discord itself are logged too; its own are logged by its commands.
 - Every card is built in `src/card.ts` with Discord's newer components, in one design: Nexo's
   amber is the only color, icons are [Heroicons](https://heroicons.com) uploaded as the app's own
   emojis (`src/icons.ts`), and facts show as small gray labels above their values. What Nexo

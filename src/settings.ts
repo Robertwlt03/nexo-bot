@@ -4,6 +4,7 @@ import { dirname } from "node:path";
 // 26.6.6 knows only the old name; DatabaseSync also runs on Node 26.0 to 26.10. Switch to
 // Database once the types have it.
 import { DatabaseSync } from "node:sqlite";
+import type { Locale } from "discord.js";
 
 /** The two messages a server can post when someone joins or leaves. */
 export type GreetingKind = "welcome" | "goodbye";
@@ -48,8 +49,14 @@ export function openSettings(path: string) {
     )`);
     database.exec(`CREATE TABLE IF NOT EXISTS modlog (
         guild_id TEXT PRIMARY KEY,
-        channel_id TEXT NOT NULL
+        channel_id TEXT NOT NULL,
+        locale TEXT NOT NULL
     )`);
+    // The mod log's language came later; a mod log set up before keeps English until set up again.
+    const modlogColumns = database.prepare("PRAGMA table_info(modlog)").all() as { name: string }[];
+    if (!modlogColumns.some(({ name }) => name === "locale")) {
+        database.exec("ALTER TABLE modlog ADD COLUMN locale TEXT NOT NULL DEFAULT 'en-US'");
+    }
     // A member's open ticket: one per member and server, so a second click finds the first one.
     database.exec(`CREATE TABLE IF NOT EXISTS ticket (
         guild_id TEXT NOT NULL,
@@ -94,9 +101,13 @@ export function openSettings(path: string) {
     const removeWarning = database.prepare(
         "DELETE FROM warning WHERE guild_id = ? AND id = ? RETURNING user_id",
     );
-    const selectModlog = database.prepare("SELECT channel_id FROM modlog WHERE guild_id = ?");
-    const saveModlog = database.prepare(`INSERT INTO modlog VALUES (?, ?)
-        ON CONFLICT (guild_id) DO UPDATE SET channel_id = excluded.channel_id`);
+    const selectModlog = database.prepare(
+        "SELECT channel_id, locale FROM modlog WHERE guild_id = ?",
+    );
+    const saveModlog = database.prepare(`INSERT INTO modlog (guild_id, channel_id, locale)
+        VALUES (?, ?, ?)
+        ON CONFLICT (guild_id) DO UPDATE SET channel_id = excluded.channel_id,
+        locale = excluded.locale`);
     const removeModlog = database.prepare("DELETE FROM modlog WHERE guild_id = ?");
     const addXp = database.prepare(`INSERT INTO xp VALUES (?, ?, ?)
         ON CONFLICT (guild_id, user_id) DO UPDATE SET total_xp = total_xp + excluded.total_xp
@@ -161,14 +172,20 @@ export function openSettings(path: string) {
         removeWarning(guildId: string, id: number): string | undefined {
             return (removeWarning.get(guildId, id) as { user_id: string } | undefined)?.user_id;
         },
-        /** The channel where Nexo logs what moderators do; undefined when it logs nothing. */
-        modlogChannel(guildId: string): string | undefined {
-            return (selectModlog.get(guildId) as { channel_id: string } | undefined)?.channel_id;
+        /**
+         * Where Nexo logs what moderators do, and in which language: that of whoever set it up,
+         * for entries no moderator's language comes with. Undefined when it logs nothing.
+         */
+        modlog(guildId: string): { channelId: string; locale: Locale } | undefined {
+            const row = selectModlog.get(guildId) as
+                | { channel_id: string; locale: Locale }
+                | undefined;
+            return row && { channelId: row.channel_id, locale: row.locale };
         },
-        saveModlogChannel(guildId: string, channelId: string): void {
-            saveModlog.run(guildId, channelId);
+        saveModlog(guildId: string, channelId: string, locale: Locale): void {
+            saveModlog.run(guildId, channelId, locale);
         },
-        removeModlogChannel(guildId: string): void {
+        removeModlog(guildId: string): void {
             removeModlog.run(guildId);
         },
         /** The thread of a member's open ticket; undefined when they have none. */

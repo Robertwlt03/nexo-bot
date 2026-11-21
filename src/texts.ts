@@ -167,12 +167,14 @@ export const en = {
         kick: "Kick, Approve, and Reject Members",
         ban: "Ban Members",
     },
-    modlogDescription: "Logs in a channel what moderators do through Nexo",
+    modlogDescription: "Logs in a channel what moderators do, through Nexo or Discord",
     modlogSetupDescription: "Sets the channel for the mod log",
     modlogChannelDescription: "Where Nexo logs warnings, timeouts, kicks and bans",
     modlogOffDescription: "Turns the mod log off",
-    modlogSaved: (channel: string) =>
-        `What moderators do through Nexo is now logged in ${channel}.`,
+    modlogSaved: (channel: string) => `Moderation on this server is now logged in ${channel}.`,
+    modlogNoAuditLog:
+        "Kicks, bans and timeouts made in Discord itself appear there once Nexo may View Audit " +
+        "Log; until then, only Nexo's commands do.",
     modlogOff: "The mod log is off.",
     modlogPublic: "Note: every member can read that channel, reasons included.",
     modlogPrefix: "Mod log:",

@@ -18,6 +18,7 @@ import { readConfig } from "./config.ts";
 import { sendGreeting } from "./greeting.ts";
 import { icon, syncIcons } from "./icons.ts";
 import { reachedLevel, rollXp, xpCooldowns } from "./leveling.ts";
+import { logAuditEntry } from "./modlog.ts";
 import { type GreetingKind, openSettings } from "./settings.ts";
 import { texts } from "./texts.ts";
 
@@ -26,11 +27,13 @@ const settings = openSettings(config.databasePath);
 const client = new Client({
     // GuildMembers is a privileged intent: it tells the bot when someone joins or leaves.
     // GuildMessages only says that someone wrote, for XP; reading what they wrote would need
-    // the privileged MessageContent intent, which Nexo does without.
+    // the privileged MessageContent intent, which Nexo does without. GuildModeration brings new
+    // audit log entries, for the mod log, where Nexo may view the audit log.
     intents: [
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMembers,
         GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.GuildModeration,
     ],
     // Without it, Discord.js reports only leavers it happens to have seen since the bot started.
     partials: [Partials.GuildMember],
@@ -151,6 +154,12 @@ client.on(Events.MessageCreate, async (message) => {
         console.error(`Could not give XP to ${message.author.tag}:`, error);
     }
 });
+
+client.on(Events.GuildAuditLogEntryCreate, (entry, guild) =>
+    logAuditEntry(entry, guild, settings).catch((error: unknown) =>
+        console.error(`Could not log an audit log entry of ${guild.name}:`, error),
+    ),
+);
 
 client.on(Events.GuildMemberRemove, async (member) => {
     if (member.user.bot) return;

@@ -1,6 +1,9 @@
 import {
+    AuditLogEvent,
     type ContainerBuilder,
     channelMention,
+    type Guild,
+    type GuildAuditLogsEntry,
     MessageFlags,
     type RepliableInteraction,
     TimestampStyles,
@@ -14,7 +17,7 @@ import { type IconName, icon } from "./icons.ts";
 import type { Settings } from "./settings.ts";
 import { en, type Texts, texts } from "./texts.ts";
 
-/** Something a moderator did through Nexo. */
+/** Something a moderator did, through Nexo or in Discord itself. */
 export type ModlogAction = keyof Texts["modlogTitles"];
 
 /** Each action's icon; taking an action back shares one. */
@@ -64,7 +67,7 @@ export async function logModeration(
     settings: Settings,
     entry: Omit<ModlogEntry, "moderatorId">,
 ): Promise<void> {
-    const channelId = settings.modlogChannel(interaction.guildId);
+    const channelId = settings.modlog(interaction.guildId)?.channelId;
     if (!channelId) return;
     const t = texts(interaction.locale);
     const logged = modlogCard(t, { ...entry, moderatorId: interaction.user.id });
@@ -89,4 +92,53 @@ export async function logModeration(
         content: `${t.modlogPrefix} ${problem}`,
         flags: MessageFlags.Ephemeral,
     });
+}
+
+/**
+ * What an entry of Discord's audit log means for the mod log: a kick, a ban, a lifted ban, or a
+ * timeout given or ended. Undefined for everything else, such as a nickname change.
+ */
+export function auditModlogEntry(entry: GuildAuditLogsEntry): ModlogEntry | undefined {
+    const { targetId: userId, executorId: moderatorId, reason } = entry;
+    if (!userId || !moderatorId) return undefined;
+    // What every logged entry has; the action and a timeout's end are added below.
+    const shared = { userId, moderatorId, reason };
+    switch (entry.action) {
+        case AuditLogEvent.MemberKick:
+            return { ...shared, action: "kick" };
+        case AuditLogEvent.MemberBanAdd:
+            return { ...shared, action: "ban" };
+        case AuditLogEvent.MemberBanRemove:
+            return { ...shared, action: "unban" };
+        case AuditLogEvent.MemberUpdate: {
+            const timeout = entry.changes.find(
+                (change) => change.key === "communication_disabled_until",
+            );
+            if (!timeout) return undefined;
+            return timeout.new
+                ? { ...shared, action: "timeout", until: new Date(timeout.new) }
+                : { ...shared, action: "untimeout" };
+        }
+        default:
+            return undefined;
+    }
+}
+
+/**
+ * Logs what a moderator did in Discord itself, from the server's audit log, in the language of
+ * whoever set up the mod log. What Nexo did is skipped: its commands log themselves, with the
+ * moderator who used them. Nobody waits for an answer, so a failed post only goes to the console.
+ */
+export async function logAuditEntry(
+    entry: GuildAuditLogsEntry,
+    guild: Guild,
+    settings: Settings,
+): Promise<void> {
+    const modlog = settings.modlog(guild.id);
+    if (!modlog || entry.executorId === guild.client.user.id) return;
+    const logged = auditModlogEntry(entry);
+    if (!logged) return;
+    const card = modlogCard(texts(modlog.locale), logged);
+    const result = await post(guild, modlog.channelId, { components: [card], flags: CARD });
+    if (result !== "sent") console.error(`Could not post in the mod log of ${guild.name}:`, result);
 }
