@@ -27,6 +27,9 @@ All notable changes to this project are listed here. The format follows
   member with their ID, the moderator, the reason, and the end of a timeout or a warning's
   number. Nexo answers the moderator first; if the card can't be posted, a private follow-up
   says why. A public log channel gets a note when it is set up.
+- `/ticket setup`: a card with a button that opens a ticket, a private thread only the member,
+  the team (an optional role) and those who may manage threads see. One open ticket per member;
+  a close button locks the thread. Setup names the permissions Nexo still lacks in the channel.
 
 ### Changed
 

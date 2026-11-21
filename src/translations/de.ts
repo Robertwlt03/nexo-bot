@@ -55,6 +55,10 @@ export const de: Texts = {
         ViewChannel: "Kanal ansehen",
         SendMessages: "Nachrichten senden",
         EmbedLinks: "Links einbetten",
+        CreatePrivateThreads: "Private Threads erstellen",
+        SendMessagesInThreads: "Nachrichten in Threads senden",
+        ManageThreads: "Threads und Posts verwalten",
+        MentionEveryone: "Erwähnung von @everyone, @here und allen Rollen",
     },
     welcome: {
         description: "Begrüßt neue Mitglieder in einem Kanal",
@@ -193,4 +197,31 @@ export const de: Texts = {
     leaderboardEmpty:
         "Noch hat niemand XP. Mitglieder sammeln sie, indem sie Nachrichten schreiben.",
     leaderboardYou: (place: number) => `Du: Rang ${place}`,
+    ticketDescription: "Lässt Mitglieder ein privates Ticket an das Team öffnen",
+    ticketSetupDescription: "Postet den Button, mit dem Mitglieder ein Ticket öffnen",
+    ticketChannelDescription: "Wo der Button hinkommt; jedes Ticket ist dort ein privater Thread",
+    ticketTeamName: "team",
+    ticketTeamDescription:
+        "Wer Tickets beantwortet; ohne Angabe alle, die Threads verwalten dürfen",
+    ticketMessageDescription: "Der Text über dem Button; leer lassen für den Standardtext",
+    ticketPanelTitle: "Support",
+    ticketPanelText:
+        "Brauchst du Hilfe vom Team? Öffne ein Ticket: einen privaten Thread, den nur du und das " +
+        "Team sehen.",
+    ticketOpenButton: "Ticket öffnen",
+    ticketCannotRun: (channel: string, missing: string) =>
+        `Nexo kann in ${channel} noch keine Tickets führen. Gib ihm dort diese Rechte: ${missing}.`,
+    ticketSetUp: (channel: string) =>
+        `Der Ticket-Button ist in ${channel}. Um Tickets zu beenden, lösche die Karte mit dem ` +
+        "Button.",
+    ticketTeamNotMentionable: (role: string) =>
+        `Nexo erwähnt das Team in jedem Ticket, und du darfst ${role} nicht erwähnen. Mach die ` +
+        "Rolle erwähnbar, oder frag jemanden, der alle Rollen erwähnen darf.",
+    ticketTitle: "Ticket",
+    ticketHello: "Schreib, worum es geht; das Team antwortet hier.",
+    ticketTeam: "Team",
+    ticketCloseButton: "Ticket schließen",
+    ticketClosedBy: (member: string) => `Geschlossen von ${member}.`,
+    ticketOpened: (thread: string) => `Dein Ticket: ${thread}`,
+    ticketAlreadyOpen: (thread: string) => `Du hast schon ein offenes Ticket: ${thread}`,
 };

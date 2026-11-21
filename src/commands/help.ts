@@ -10,7 +10,7 @@ import { commandMention } from "./mention.ts";
 const SECTIONS: Record<keyof Texts["helpSections"], readonly string[]> = {
     general: ["help", "ping", "info"],
     members: ["serverinfo", "userinfo", "avatar", "rank", "leaderboard"],
-    setup: ["welcome", "goodbye", "autorole", "modlog"],
+    setup: ["welcome", "goodbye", "autorole", "modlog", "ticket"],
     moderation: ["warn", "warnings", "unwarn", "timeout", "untimeout", "kick", "ban", "unban"],
 };
 

@@ -24,6 +24,7 @@ in the language of each member's Discord.
 | `/kick`        | Removes a member from the server; they can join again                         |
 | `/ban`         | Bans someone, also before they join; `/unban` lifts it                        |
 | `/modlog`      | Logs every moderation command in a channel: `setup`, `off`; for admins        |
+| `/ticket`      | Posts a button that opens a private ticket thread with the team; for admins   |
 | `/rank`        | Shows a member's level, rank and XP, or yours                                 |
 | `/leaderboard` | Shows the ten members with the most XP                                        |
 | `/help`        | Lists every command with its description                                      |
@@ -44,9 +45,10 @@ You need [Node.js 26](https://nodejs.org) and [pnpm](https://pnpm.io).
    _Advanced_, right-click your server, choose _Copy Server ID_ and paste it after `GUILD_ID=`.
 3. **Invite it.** Under _OAuth2_, open the _URL Generator_, tick the scopes `bot` and
    `applications.commands` and the permissions _Send Messages_, _Embed Links_, _Manage Roles_ (for
-   automatic roles) and _Timeout Members_, _Kick Members_ and _Ban Members_ (for moderation), open
-   the URL and pick your server. Nexo can only give roles below its own
-   highest role: in the server settings under _Roles_, drag Nexo's role above them.
+   automatic roles), _Timeout Members_, _Kick Members_ and _Ban Members_ (for moderation), and
+   _Create Private Threads_, _Send Messages in Threads_ and _Manage Threads and Posts_ (for
+   tickets), open the URL and pick your server. Nexo can only give roles below its own highest
+   role: in the server settings under _Roles_, drag Nexo's role above them.
 4. **Start it.**
 
    ```bash
@@ -54,7 +56,7 @@ You need [Node.js 26](https://nodejs.org) and [pnpm](https://pnpm.io).
    pnpm dev
    ```
 
-   The console shows `Nexo#1234 is online with 20 commands`. `pnpm dev` restarts the bot whenever
+   The console shows `Nexo#1234 is online with 21 commands`. `pnpm dev` restarts the bot whenever
    a file changes; `pnpm start` runs it once.
 
 ## <img src="assets/icons/use.svg" height="33" align="absmiddle" alt="">Use

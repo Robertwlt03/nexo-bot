@@ -50,6 +50,13 @@ export function openSettings(path: string) {
         guild_id TEXT PRIMARY KEY,
         channel_id TEXT NOT NULL
     )`);
+    // A member's open ticket: one per member and server, so a second click finds the first one.
+    database.exec(`CREATE TABLE IF NOT EXISTS ticket (
+        guild_id TEXT NOT NULL,
+        user_id TEXT NOT NULL,
+        thread_id TEXT NOT NULL,
+        PRIMARY KEY (guild_id, user_id)
+    )`);
     database.exec(`CREATE TABLE IF NOT EXISTS autorole (
         guild_id TEXT NOT NULL,
         role_id TEXT NOT NULL,
@@ -100,6 +107,12 @@ export function openSettings(path: string) {
     );
     const totalXp = (guildId: string, userId: string): number =>
         (selectXp.get(guildId, userId) as { total_xp: number } | undefined)?.total_xp ?? 0;
+    const selectTicket = database.prepare(
+        "SELECT thread_id FROM ticket WHERE guild_id = ? AND user_id = ?",
+    );
+    const saveTicket = database.prepare(`INSERT INTO ticket VALUES (?, ?, ?)
+        ON CONFLICT (guild_id, user_id) DO UPDATE SET thread_id = excluded.thread_id`);
+    const closeTicket = database.prepare("DELETE FROM ticket WHERE thread_id = ?");
     const selectTop = database.prepare(
         `SELECT user_id, total_xp FROM xp WHERE guild_id = ?
             ORDER BY total_xp DESC, user_id LIMIT ?`,
@@ -157,6 +170,18 @@ export function openSettings(path: string) {
         },
         removeModlogChannel(guildId: string): void {
             removeModlog.run(guildId);
+        },
+        /** The thread of a member's open ticket; undefined when they have none. */
+        ticket(guildId: string, userId: string): string | undefined {
+            const row = selectTicket.get(guildId, userId) as { thread_id: string } | undefined;
+            return row?.thread_id;
+        },
+        /** Keeps a member's new ticket; an older one of theirs is forgotten. */
+        saveTicket(guildId: string, userId: string, threadId: string): void {
+            saveTicket.run(guildId, userId, threadId);
+        },
+        closeTicket(threadId: string): void {
+            closeTicket.run(threadId);
         },
         /** Adds XP to a member and gives back their new total. */
         addXp(guildId: string, userId: string, amount: number): number {

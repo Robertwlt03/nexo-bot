@@ -62,9 +62,10 @@
 - Commands: one file each in `src/commands/`, listed in `src/commands/index.ts`
 - Answer cards: `src/card.ts`; texts: `src/texts.ts` and `src/translations/`
 - Each server's settings: `src/settings.ts` (SQLite); welcome and goodbye: `src/greeting.ts`;
-  automatic roles: `src/autorole.ts`; moderation checks: `src/moderation.ts`; mod log:
-  `src/modlog.ts`; posting in a server's channel: `src/channel.ts`; level math:
-  `src/leveling.ts`; icons: `src/icons.ts`; Nexo's drawn pictures: `src/images.ts`
+  automatic roles: `src/autorole.ts`; tickets: `src/commands/ticket.ts`; moderation checks:
+  `src/moderation.ts`; mod log: `src/modlog.ts`; posting in a server's channel:
+  `src/channel.ts`; level math: `src/leveling.ts`; icons: `src/icons.ts`; Nexo's drawn
+  pictures: `src/images.ts`
 - Tests: `tests/`; README graphics: `assets/`; fonts for Nexo's pictures: `assets/fonts/`
   (Geist, SIL Open Font License in `OFL.txt`)
 

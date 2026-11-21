@@ -56,6 +56,10 @@ export const en = {
         ViewChannel: "View Channel",
         SendMessages: "Send Messages",
         EmbedLinks: "Embed Links",
+        CreatePrivateThreads: "Create Private Threads",
+        SendMessagesInThreads: "Send Messages in Threads",
+        ManageThreads: "Manage Threads and Posts",
+        MentionEveryone: "Mention @everyone, @here, and All Roles",
     },
     welcome: {
         description: "Greets new members in a channel",
@@ -192,6 +196,30 @@ export const en = {
     leaderboardTitle: "Leaderboard",
     leaderboardEmpty: "Nobody has XP yet. Members earn it by writing messages.",
     leaderboardYou: (place: number) => `You: rank ${place}`,
+    ticketDescription: "Lets members open a private ticket with the team",
+    ticketSetupDescription: "Posts the button members open a ticket with",
+    ticketChannelDescription: "Where the button goes; each ticket is a private thread there",
+    ticketTeamName: "team",
+    ticketTeamDescription: "Who answers tickets; without it, those who may manage threads",
+    ticketMessageDescription: "The text above the button; leave it out for the default",
+    ticketPanelTitle: "Support",
+    ticketPanelText:
+        "Need help from the team? Open a ticket: a private thread only you and the team see.",
+    ticketOpenButton: "Open a ticket",
+    ticketCannotRun: (channel: string, missing: string) =>
+        `Nexo can't run tickets in ${channel} yet. Give it these permissions there: ${missing}.`,
+    ticketSetUp: (channel: string) =>
+        `The ticket button is in ${channel}. To stop tickets, delete the card with the button.`,
+    ticketTeamNotMentionable: (role: string) =>
+        `Nexo mentions the team in every ticket, and you may not mention ${role}. Make the role ` +
+        "mentionable, or ask someone who may mention every role.",
+    ticketTitle: "Ticket",
+    ticketHello: "Tell us what it's about; the team answers here.",
+    ticketTeam: "Team",
+    ticketCloseButton: "Close ticket",
+    ticketClosedBy: (member: string) => `Closed by ${member}.`,
+    ticketOpened: (thread: string) => `Your ticket: ${thread}`,
+    ticketAlreadyOpen: (thread: string) => `You already have a ticket open: ${thread}`,
 };
 
 export type Texts = typeof en;

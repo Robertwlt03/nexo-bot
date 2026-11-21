@@ -26,6 +26,8 @@ const ICONS = {
     timeout: "clock",
     ban: "no-symbol",
     undo: "check-circle",
+    ticket: "ticket",
+    closed: "lock-closed",
 } as const;
 export type IconName = keyof typeof ICONS;
 

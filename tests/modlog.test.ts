@@ -5,17 +5,7 @@ import { logModeration, modlogCard } from "../src/modlog.ts";
 import { openSettings } from "../src/settings.ts";
 import { en } from "../src/texts.ts";
 import { de } from "../src/translations/de.ts";
-
-/** Every text a card shows, top to bottom, as one string. */
-function textOf(card: ReturnType<typeof modlogCard>): string {
-    const texts: string[] = [];
-    const walk = (component: object) => {
-        if ("content" in component) texts.push(String(component.content));
-        if ("components" in component) (component.components as object[]).forEach(walk);
-    };
-    walk(card.toJSON());
-    return texts.join("\n");
-}
+import { textOf } from "./text-of.ts";
 
 describe("modlogCard", () => {
     it("names the action, the member with their ID, the moderator and the reason", () => {

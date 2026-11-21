@@ -103,6 +103,20 @@ describe("mod log", () => {
     });
 });
 
+describe("tickets", () => {
+    it("keep one open ticket per server and member until its thread is closed", () => {
+        const settings = openSettings(":memory:");
+        expect(settings.ticket("server", "lena")).toBeUndefined();
+        settings.saveTicket("server", "lena", "a");
+        settings.saveTicket("server", "lena", "b");
+        settings.saveTicket("other", "lena", "c");
+        expect(settings.ticket("server", "lena")).toBe("b");
+        settings.closeTicket("b");
+        expect(settings.ticket("server", "lena")).toBeUndefined();
+        expect(settings.ticket("other", "lena")).toBe("c");
+    });
+});
+
 describe("XP", () => {
     it("adds up per server and member, and ranks members by their total", () => {
         const settings = openSettings(":memory:");

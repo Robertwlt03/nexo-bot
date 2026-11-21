@@ -2,13 +2,24 @@ import type { Guild, GuildBasedChannel, MessageCreateOptions } from "discord.js"
 
 /** What Nexo needs in a channel to post its cards. */
 export const POST_PERMISSIONS = ["ViewChannel", "SendMessages", "EmbedLinks"] as const;
-export type PostPermission = (typeof POST_PERMISSIONS)[number];
+/** What Nexo needs in a channel to run tickets there as private threads. */
+export const TICKET_PERMISSIONS = [
+    ...POST_PERMISSIONS,
+    "CreatePrivateThreads",
+    "SendMessagesInThreads",
+    "ManageThreads",
+] as const;
+/** Every channel permission Nexo checks, the names `texts.permissionNames` translates. */
+export type ChannelPermission = (typeof TICKET_PERMISSIONS)[number] | "MentionEveryone";
 
-/** The permissions Nexo still lacks in a channel; none means it can post its cards there. */
-export function missingPermissions(channel: GuildBasedChannel): PostPermission[] {
+/** The permissions Nexo still lacks in a channel; by default, those it needs to post cards. */
+export function missingPermissions(
+    channel: GuildBasedChannel,
+    needed: readonly ChannelPermission[] = POST_PERMISSIONS,
+): ChannelPermission[] {
     const me = channel.guild.members.me;
-    if (!me) return [...POST_PERMISSIONS];
-    return channel.permissionsFor(me).missing([...POST_PERMISSIONS]) as PostPermission[];
+    if (!me) return [...needed];
+    return channel.permissionsFor(me).missing([...needed]) as ChannelPermission[];
 }
 
 /**
@@ -19,7 +30,7 @@ export async function post(
     guild: Guild,
     channelId: string,
     message: MessageCreateOptions,
-): Promise<"sent" | "no-channel" | PostPermission[]> {
+): Promise<"sent" | "no-channel" | ChannelPermission[]> {
     const channel = guild.channels.cache.get(channelId);
     if (!channel?.isSendable()) return "no-channel";
     const missing = missingPermissions(channel);

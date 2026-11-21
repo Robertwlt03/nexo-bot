@@ -65,14 +65,15 @@ client.once(Events.ClientReady, async (ready) => {
 
 client.on(Events.InteractionCreate, async (interaction) => {
     if (!interaction.isChatInputCommand() && !interaction.isButton()) return;
-    const [name, what = ""] = interaction.isButton()
-        ? interaction.customId.split(":", 2)
+    // A button's ID is "command:what"; what may hold colons of its own.
+    const [name, ...what] = interaction.isButton()
+        ? interaction.customId.split(":")
         : [interaction.commandName];
     const command = commands.find(({ data }) => data.name === name);
     try {
         // A command or button from an older version of the bot gets an answer, not silence.
         if (interaction.isButton() && command?.button) {
-            await command.button(interaction, { settings }, what);
+            await command.button(interaction, { settings }, what.join(":"));
         } else if (interaction.isChatInputCommand() && command) {
             await command.run(interaction, { settings });
         } else {
